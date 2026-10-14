@@ -1,0 +1,29 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Built database: rebuilt from data/raw and data/curated by src/load.py (decision 0007)
+data/build/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Default output folders when scripts are run from the project root.
+# Move anything worth keeping into docs/reference/ or data/raw/.
+cacs_reference/
+cacs_compare/
+
+# Secrets
+.env
+
+# Editors and OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
