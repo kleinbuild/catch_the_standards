@@ -25,6 +25,7 @@ When asked to document what was learned, write it as working notes: claim, then 
 
 ```
 CLAUDE.md, README.md, requirements.txt, .gitignore
+docs/glossary.md   project terms and their meanings; read before writing code, data, or decisions
 docs/decisions/    one file per decision, numbered; read these before changing data handling
 docs/reference/    generated CACS_URL_REFERENCE.md, codes.csv, codes.json
 scripts/           cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads)
@@ -38,11 +39,13 @@ tests/
 
 ## Rules
 
+- Use terms as defined in `docs/glossary.md`. To use a term with a new meaning, add or change its glossary entry in the same change.
 - The per-subject pages (`/cacs/<subject>?...&dl=1`) are the data source. `/cacs/all` is for cross-subject text search only. (0001)
 - Never edit `data/build/standards.db` by hand. Change the inputs in `data/raw` or `data/curated` and rebuild. (0007)
 - Never overwrite or reorder rows in `data/curated/`. Add rows; mark machine-generated rows `reviewed=0` with a `source` value. Only the owner sets `reviewed=1`.
 - Keep CDE's own codes and record IDs (e.g. `/cacs/id/web/5531`) on every row, even where we normalize (cluster alias, grade ranges), so any row can be traced back to the site.
 - Similarity (shared words, embeddings) never becomes a prerequisite edge on its own. It can only produce unreviewed suggestions. (0006)
+- Each guidance record keeps the scope its source states (target type, learning stage, population). Never widen that scope when entering, summarizing, or displaying it. The tool shows the records whose scope matches the teacher's situation and never ranks them or picks one method. (0009, proposed)
 - Wait at least 1 second between requests to the CDE site.
 
 
