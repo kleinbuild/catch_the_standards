@@ -12,4 +12,4 @@ for r in rows:
         text = r["Description"].split("Standard:", 1)[-1]   # skip the cluster text
         hits = sorted({m.lower() for m in pattern.findall(text)})
         if hits:
-            print(r["Standard Identifier"], hits)
+            print(r["Standard Identifier"], r["Discipline"], r["Conceptual Category"], hits)
