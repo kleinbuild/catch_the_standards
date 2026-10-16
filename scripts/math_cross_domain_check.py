@@ -2,8 +2,8 @@ import csv, re
 
 #Alpha version 10/15/2026 for test run proving concept
 
-path = "data/raw/math_subject_raw.csv"   # adjust to your actual filename
-with open(path, encoding="utf-8-sig", newline="") as f:
+path = "/home/jamesk/Documents/myApps/catch_the_standards/data/raw/math_subject_raw.csv"   # adjust to your actual filename
+with open(path, encoding="cp1252", newline="") as f:
     rows = list(csv.DictReader(f))
 print(len(rows), "rows")
 pattern = re.compile(r"equation|expression|fraction|multipl|ratio|square root|cube root", re.I)
