@@ -13,7 +13,7 @@ die() { echo "Error: $*" >&2; exit 1; }
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 case "$(uname -s)" in
-  Linux*)        OS=linux;   HINT="Install it with your package manager." ;;
+  Linux*)        OS=linux;   HINT="If your distribution doesn't package Python $WANT, tools like pyenv or uv can install it." ;;
   Darwin*)       OS=macos;   HINT="Install it from python.org, or with Homebrew: brew install python@$WANT" ;;
   MINGW*|MSYS*)  OS=windows; HINT="Install it from python.org; check what is installed with: py --list" ;;
   *) die "unsupported system: $(uname -s)" ;;
