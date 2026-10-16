@@ -13,3 +13,14 @@ for r in rows:
         hits = sorted({m.lower() for m in pattern.findall(text)})
         if hits:
             print(r["Standard Identifier"], r["Discipline"], r["Conceptual Category"], hits)
+
+from collections import defaultdict
+groups = defaultdict(list)
+for r in rows:
+    groups[r["Standard Identifier"]].append(r)
+print(len(groups), "unique identifiers;", sum(len(v) > 1 for v in groups.values()), "appear more than once")
+for k, rs in groups.items():
+    if len(rs) > 1:
+        differ = [c for c in rs[0] if c != "Discipline" and len({x[c] for x in rs}) > 1]
+        if differ:
+            print("differs:", k, differ)
