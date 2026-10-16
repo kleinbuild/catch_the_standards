@@ -9,14 +9,22 @@ When asked to document what was learned, write it as working notes: claim, then 
 
 ## Environment
 
-- Windows, Git Bash (MINGW64). Project at `H:\MyApps\catch_the_standards` (`/h/MyApps/catch_the_standards` in Git Bash).
-- Linux Debian 13 (Q4OS) on a small laptop. Project at `/home/jamesk/Documents/myApps/catch_the_standards/` 
-- Python 3.14 in a project venv. The machine also has a Microsoft Store Python 3.12 that `python3` can resolve to, so always activate the venv and use `python -m pip`, never bare `pip`. See docs/decisions/0008.
+- Development happens on two machines:
+  - Windows, project at `H:\MyApps\catch_the_standards`. Git Bash (MINGW64) is the preferred shell (`/h/MyApps/catch_the_standards`), by choice; PowerShell and Command Prompt are also used. Give Git Bash commands by default, and note where PowerShell or cmd differ.
+  - Debian 13 (Q4OS) laptop, project at `/home/jamesk/Documents/myApps/catch_the_standards/`. Debian 13's packaged Python is 3.13.
+- macOS is a required target: most end users are expected to be on Mac. It is not a development machine; a borrowed Mac is available for testing. Code must run unchanged on Windows, Linux, and macOS: build paths with `pathlib`, don't call shell commands from Python, and open text files with an explicit `encoding="utf-8"` (Windows defaults to cp1252).
+- Python 3.14 in a project venv, `.venv`. The Windows machine also has a Microsoft Store Python 3.12 that `python3` can resolve to, so always activate the venv and use `python -m pip`, never bare `pip`. See docs/decisions/0008.
 - Setup:
   ```bash
-  py -3.14 -m venv .venv
-  source .venv/Scripts/activate
-  python -m pip install -r requirements.txt
+  bash scripts/setup_venv.sh                                         # Git Bash, Linux, macOS
+  powershell -ExecutionPolicy Bypass -File scripts\setup_venv.ps1    # PowerShell or cmd
+  ```
+- Activate:
+  ```
+  source .venv/Scripts/activate      # Git Bash on Windows
+  .\.venv\Scripts\Activate.ps1       # PowerShell
+  .venv\Scripts\activate.bat         # Command Prompt
+  source .venv/bin/activate          # Linux, macOS
   ```
 - Scripts that fetch from www2.cde.ca.gov must run on the owner's machine. A Claude cloud workspace could not reach the site (connection refused by its proxy, 2026-10-08).
 - GitHub at https://github.com/kleinbuild/catch_the_standards; download repo with GitHub CLI using `gh repo clone kleinbuild/catch_the_standards`; or with HTTPS via https://github.com/kleinbuild/catch_the_standards.git.
@@ -25,10 +33,10 @@ When asked to document what was learned, write it as working notes: claim, then 
 
 ```
 CLAUDE.md, README.md, requirements.txt, .gitignore
-docs/glossary.md   project terms and their meanings; read before writing code, data, or decisions
 docs/decisions/    one file per decision, numbered; read these before changing data handling
 docs/reference/    generated CACS_URL_REFERENCE.md, codes.csv, codes.json
-scripts/           cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads)
+scripts/           cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads),
+                   setup_venv.sh, setup_venv.ps1 (create .venv and install requirements)
 src/               schema.sql, load.py (not written yet)
 data/raw/          downloaded CDE CSVs, committed, named with download date
 data/curated/      hand-reviewed data: concepts, reviewed edges. The owner's expert work.
@@ -39,13 +47,11 @@ tests/
 
 ## Rules
 
-- Use terms as defined in `docs/glossary.md`. To use a term with a new meaning, add or change its glossary entry in the same change.
 - The per-subject pages (`/cacs/<subject>?...&dl=1`) are the data source. `/cacs/all` is for cross-subject text search only. (0001)
 - Never edit `data/build/standards.db` by hand. Change the inputs in `data/raw` or `data/curated` and rebuild. (0007)
 - Never overwrite or reorder rows in `data/curated/`. Add rows; mark machine-generated rows `reviewed=0` with a `source` value. Only the owner sets `reviewed=1`.
 - Keep CDE's own codes and record IDs (e.g. `/cacs/id/web/5531`) on every row, even where we normalize (cluster alias, grade ranges), so any row can be traced back to the site.
 - Similarity (shared words, embeddings) never becomes a prerequisite edge on its own. It can only produce unreviewed suggestions. (0006)
-- Each guidance record keeps the scope its source states (target type, learning stage, population). Never widen that scope when entering, summarizing, or displaying it. The tool shows the records whose scope matches the teacher's situation and never ranks them or picks one method. (0009, proposed)
 - Wait at least 1 second between requests to the CDE site.
 
 
@@ -59,10 +65,11 @@ tests/
 - ELD identifiers look like `ELD.PI.K.12b.Em`; each proficiency level (Em/Ex/Br) is a separate record. (0005)
 
 
-## Current state (2026-10-13)
+## Current state (2026-10-15)
 
 Done: bulk download per subject works; filter codes discovered and documented; subject vs search-all comparison run for ELA.
 Bulk downloaded CSV for ELA, ELD, and Math CA standards.
+Setup scripts for the venv written for Git Bash/Linux/macOS and PowerShell; macOS path not yet tested.
 
 Next: write `src/schema.sql` and `src/load.py` (CSVs to SQLite, identifier parsing, structural progression edges). Needs the header row and 2–3 sample rows from an ELA download and an ELD download to set the parsing rules.
 
@@ -72,3 +79,5 @@ Open questions:
 - Whether `query=a` on `/cacs/all` matches every standard in subjects other than ELA.
 - Whether the published CA ELD Standards document has ELD-to-ELA correspondence tables usable as official bridge edges (believed, not checked).
 - Availability and licensing of Dynamic Learning Maps, Core Content Connectors, and the Achieve the Core coherence map as prerequisite sources (not checked).
+- How end users on macOS will get the tool: installing Python and running the setup script, a packaged app, or a hosted web page. The setup scripts are for development and assume comfort with a terminal.
+- Whether Python 3.13 (Debian 13's version) is acceptable on the laptop, or 3.14 should be installed there.
