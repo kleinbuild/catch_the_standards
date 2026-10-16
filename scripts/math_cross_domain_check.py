@@ -6,7 +6,7 @@ path = "/home/jamesk/Documents/myApps/catch_the_standards/data/raw/math_subject_
 with open(path, encoding="cp1252", newline="") as f:
     rows = list(csv.DictReader(f))
 print(len(rows), "rows")
-pattern = re.compile(r"equation|expression|fraction|multipl|ratio|square root|cube root", re.I)
+pattern = re.compile(r"\b(equations?|expressions?|fractions?|multiply|multiplying|multiplication|ratios?|square roots?|cube roots?)\b", re.I)
 for r in rows:
     if "Geometry" in (r["Domain"], r["Conceptual Category"]) or r["Domain"] == "Measurement and Data":
         text = r["Description"].split("Standard:", 1)[-1]   # skip the cluster text
