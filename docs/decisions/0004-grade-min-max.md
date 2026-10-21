@@ -12,6 +12,6 @@ Kindergarten appears as "K" on results pages and as "TK & K" (code 0) in the gra
 
 Amendment, 2026-10-20 (0011, 0012)
 
-Identifiers do not all use a hyphen. The HTML writes some grade bands with an en dash (RH.6–8.1, ELD.PI.9–10.1.Br) and others with a hyphen (L.9-10.1). The CSV export writes hyphens. Each row stores the identifier as written and a copy with every dash as a hyphen (0012).
+Identifiers do not all use a hyphen. The HTML writes the grade band with an en dash in RH, RST, and WHST identifiers and in high school ELD identifiers (RH.6–8.1, ELD.PI.9–10.1.Br). Other ELA identifiers use a hyphen (L.9-10.1). The CSV export writes hyphens. Each row stores the identifier as written and a copy with every dash as a hyphen (0012).
 
 Grades are read from the scraped Grade or Grade Range field (0011), so the CSV's grade column no longer needs parsing. The CSV's Min Grade and Max Grade columns only split the same range, and no grade differed between the CSV and the scrape in any of math, ELA, or ELD.
