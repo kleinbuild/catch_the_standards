@@ -84,7 +84,7 @@ grade code: integer for a grade. 0 = TK & K, 1–12 = grades 1–12. The site sh
 
 grade_min, grade_max: the lowest and highest grade codes a standard covers. Equal for single-grade standards. Computed by the loader from the Grade or Grade Range field. (0004, 0011)
 
-grade range: a standard covering more than one grade, e.g. 9–10. The Grade Range field on results pages uses an en dash. Identifiers use an en dash in some subjects and a hyphen in others (RH.6–8.1, L.9-10.1). (0004, 0012)
+grade range: a standard covering more than one grade, e.g. 9–10. The Grade Range field on results pages uses an en dash. Identifiers write the grade band with an en dash in RH, RST, WHST, and high school ELD (RH.6–8.1, ELD.PI.9–10.1.Br) and with a hyphen in other ELA identifiers (L.9-10.1). (0004, 0012)
 
 guidance record: a row describing a teaching method or practice, with its source, the scope the source states, the evidence strength the source states, and reviewed. Shown when its scope matches the teacher's situation, never ranked. (0009)
 
