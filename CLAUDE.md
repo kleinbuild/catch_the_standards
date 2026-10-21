@@ -34,11 +34,15 @@ When asked to document what was learned, write it as working notes: claim, then 
 ```
 CLAUDE.md, README.md, requirements.txt, .gitignore
 docs/decisions/    one file per decision, numbered; read these before changing data handling
-docs/reference/    generated CACS_URL_REFERENCE.md, codes.csv, codes.json
-scripts/           cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads),
+docs/reference/    glossary.md (project terms); generated CACS_URL_REFERENCE.md, codes.csv, codes.json
+scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE record; the standards source, 0011)
+                   match_csv_to_records.py (pairs dl=1 CSV rows with scraped records; not yet committed)
+                   probe_cacs_ids.py (fetch one HTML results page and report record links and symbols)
+                   cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads; ELA only, 0001)
+                   math_cross_domain_check.py, show_rows.py (exploratory checks on the math dl=1 CSV)
                    setup_venv.sh, setup_venv.ps1 (create .venv and install requirements)
 src/               schema.sql, load.py (not written yet)
-data/raw/          downloaded CDE CSVs, committed, named with download date
+data/raw/          scraped records files (UTF-8) and dl=1 CSV downloads (cp1252), committed, named with date
 data/curated/      hand-reviewed data: concepts, reviewed edges. The owner's expert work.
 data/build/        standards.db, rebuilt by load.py, never committed
 tests/
@@ -47,7 +51,8 @@ tests/
 
 ## Rules
 
-- The per-subject pages (`/cacs/<subject>?...&dl=1`) are the data source. `/cacs/all` is for cross-subject text search only. (0001)
+- Standards are loaded from the per-subject pages' HTML results (`/cacs/<subject>?...&dl=0`), scraped by `scripts/scrape_cacs_records.py`. The `dl=1` CSV is a cross-check only. `/cacs/all` is for cross-subject text search only. (0001, 0011)
+- Identify standards by CDE record ID, never by identifier alone: identifiers repeat across math courses. (0011)
 - Never edit `data/build/standards.db` by hand. Change the inputs in `data/raw` or `data/curated` and rebuild. (0007)
 - Never overwrite or reorder rows in `data/curated/`. Add rows; mark machine-generated rows `reviewed=0` with a `source` value. Only the owner sets `reviewed=1`.
 - Keep CDE's own codes and record IDs (e.g. `/cacs/id/web/5531`) on every row, even where we normalize (cluster alias, grade ranges), so any row can be traced back to the site.
@@ -61,21 +66,29 @@ tests/
 - `mingrade`/`maxgrade` both default to 0, which means kindergarten only. Always set `maxgrade=12`. (0002)
 - c0/c1/c2 codes are per subject page; they are not shared across subjects. `/cacs/all` has its own `carea` codes (ELA=7, ELD=10, Math=2, Science=13, CTE 11/12) and its own `order` codes. (0002)
 - ELA cluster code 3 "Conventions of Standards English" is a misspelled duplicate of code 2 covering only grades 6–8. Treat 3 as 2. (0003)
+- Scrape URL: `https://www2.cde.ca.gov/cacs/<subject>?mingrade=0&maxgrade=12&order=0&page=<n>&perpage=100&dl=0`, paging from 0. The HTML is UTF-8 and links each record to `/cacs/id/web/<record ID>`. (0011)
+- The `dl=1` CSV has no record IDs and is cp1252: it writes "?" for the minus sign (U+2212) and not-equal sign. (0011)
+- Math identifiers are not unique: high school standards repeat once per course (A-CED.1 in five courses), and Calculus.16.0 is two standards in one course. ELA identifiers are unique. (0011)
 - High school standards carry grade ranges ("9–10", en dash). Store `grade_min`/`grade_max`. (0004)
+- Identifiers mix en dashes and hyphens (RH.6–8.1, L.9-10.1). Store as written plus a hyphen-normalized copy. In text, subtraction is written with the minus sign or the en dash. (0012)
 - ELD identifiers look like `ELD.PI.K.12b.Em`; each proficiency level (Em/Ex/Br) is a separate record. (0005)
+- `/cacs/eld` holds ELD Part I (507 records) and Part II (264), and no Part III. (0005, 0011)
 
 
-## Current state (2026-10-15)
+## Current state (2026-10-20)
 
 Done: bulk download per subject works; filter codes discovered and documented; subject vs search-all comparison run for ELA.
 Bulk downloaded CSV for ELA, ELD, and Math CA standards.
 Setup scripts for the venv written for Git Bash/Linux/macOS and PowerShell; macOS path not yet tested.
+Scraped records for math, ELA, and ELD; every dl=1 CSV row paired with one scraped record (0011).
 
-Next: write `src/schema.sql` and `src/load.py` (CSVs to SQLite, identifier parsing, structural progression edges). Needs the header row and 2–3 sample rows from an ELA download and an ELD download to set the parsing rules.
+Next: commit `scripts/match_csv_to_records.py`. Then write `src/schema.sql` and `src/load.py` (records files to SQLite keyed by record ID, identifier parsing, structural progression edges), following 0011 and 0012.
 
 Open questions:
-- Exact column names in the subject-page CSVs. Known so far: ELA download has 9 columns including Subject Area, Domain, Cluster. Search-all download has 7, including Main Category. Not yet checked what Main Category corresponds to.
-- Whether `/cacs/eld` contains all of ELD Parts I, II, and III. `/cacs/all` says some standards "have not yet been added to this system."
+- What the search-all download's Main Category corresponds to (not checked).
+- Where ELD Part III can come from, since `/cacs/eld` does not have it.
+- Whether to commit the fetched HTML pages next to each records file. (0011)
+- A progression rule for high school math, where identifiers carry no grade. (0005)
 - Whether `query=a` on `/cacs/all` matches every standard in subjects other than ELA.
 - Whether the published CA ELD Standards document has ELD-to-ELA correspondence tables usable as official bridge edges (believed, not checked).
 - Availability and licensing of Dynamic Learning Maps, Core Content Connectors, and the Achieve the Core coherence map as prerequisite sources (not checked).
