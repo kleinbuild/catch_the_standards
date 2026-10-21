@@ -70,7 +70,7 @@ tests/
 - The `dl=1` CSV has no record IDs and is cp1252: it writes "?" for the minus sign (U+2212) and not-equal sign. (0011)
 - Math identifiers are not unique: high school standards repeat once per course (A-CED.1 in five courses), and Calculus.16.0 is two standards in one course. ELA identifiers are unique. (0011)
 - High school standards carry grade ranges ("9–10", en dash). Store `grade_min`/`grade_max`. (0004)
-- Identifiers mix en dashes and hyphens (RH.6–8.1, L.9-10.1). Store as written plus a hyphen-normalized copy. In text, subtraction is written with the minus sign or the en dash. (0012)
+- Identifiers mix en dashes and hyphens: RH, RST, WHST, and high school ELD write the grade band with an en dash (RH.6–8.1, ELD.PI.9–10.1.Br); other ELA identifiers use a hyphen (L.9-10.1). Store as written plus a hyphen-normalized copy. In text, subtraction is written with the minus sign or the en dash. (0012)
 - ELD identifiers look like `ELD.PI.K.12b.Em`; each proficiency level (Em/Ex/Br) is a separate record. (0005)
 - `/cacs/eld` holds ELD Part I (507 records) and Part II (264), and no Part III. (0005, 0011)
 
@@ -86,11 +86,10 @@ Next: commit `scripts/match_csv_to_records.py`. Then write `src/schema.sql` and 
 
 Open questions:
 - What the search-all download's Main Category corresponds to (not checked).
-- Where ELD Part III can come from, since `/cacs/eld` does not have it.
 - Whether to commit the fetched HTML pages next to each records file. (0011)
 - A progression rule for high school math, where identifiers carry no grade. (0005)
 - Whether `query=a` on `/cacs/all` matches every standard in subjects other than ELA.
-- Whether the published CA ELD Standards document has ELD-to-ELA correspondence tables usable as official bridge edges (believed, not checked).
+- Whether ELD Part III, which `/cacs/eld` does not have, exists anywhere in a form usable for ELD-to-ELA bridge edges. The published CA ELD Standards document is the first place to check; it is also believed, not checked, to have ELD-to-ELA correspondence tables usable as official bridge edges.
 - Availability and licensing of Dynamic Learning Maps, Core Content Connectors, and the Achieve the Core coherence map as prerequisite sources (not checked).
 - How end users on macOS will get the tool: installing Python and running the setup script, a packaged app, or a hosted web page. The setup scripts are for development and assume comfort with a terminal.
 - Whether Python 3.13 (Debian 13's version) is acceptable on the laptop, or 3.14 should be installed there.
