@@ -1,6 +1,6 @@
 0005 Parse identifiers into parts; build progressions from them
 
-Status: accepted in principle, 2026-10-08. Parsing rules wait on real CSV rows.
+Status: accepted in principle, 2026-10-08; amended 2026-10-20 by 0011 and 0012.
 
 Split each standard identifier into its parts and store them as columns. Generate vertical progression edges from the parts instead of from cluster names.
 
@@ -13,3 +13,15 @@ ELD identifiers have more parts and a proficiency level: ELD.PI.K.12b.Em is Part
 California additions end with "CA" in the text (e.g. RF.K.2 f, L.1.1d). Keep that as a flag.
 
 Still needed: the CSV header row and 2–3 rows from an ELA download and an ELD download, to confirm which column holds the identifier and how grade and sub-items are written.
+
+Amendment, 2026-10-20 (0011, 0012)
+
+Parse the scraped records file, not the CSV. Its columns answer the "Still needed" item above: the identifier is in `identifier`, the grade is in the Grade or Grade Range field, and the text is in the `text_` columns. Parse `identifier_norm`, which has every dash as a hyphen (0012). Each parsed row is one CDE record and is keyed by its record ID.
+
+The progression rule above ("same strand, same number, ordered by grade_min") works where the grade is part of the identifier: ELA, and ELD. It does not fit high school math. A-CED.1 has no grade in it, and the same identifier is a separate record in each course (Algebra I 558, Math I 721). Calculus.16.0 is two different standards in the same course, which only the record ID tells apart. A progression rule for high school math is not decided.
+
+Math sub-items have their own identifiers and records (F-BF.4.a). Whether ELA and ELD sub-items are separate records has not been checked.
+
+ELA footnotes arrive in a separate `text_Footnote` section. Check whether the asterisk footnote described above is there before deciding where the asterisk column comes from.
+
+`/cacs/eld` holds ELD Part I (507 records) and Part II (264), and no Part III. ELD parsing, progressions, and ELD-to-ELA bridge edges cover Parts I and II until a Part III source is found.

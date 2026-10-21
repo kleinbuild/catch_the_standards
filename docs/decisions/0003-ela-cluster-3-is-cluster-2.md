@@ -1,6 +1,6 @@
 0003 Treat ELA cluster 3 "Conventions of Standards English" as cluster 2
 
-Status: accepted, 2026-10-08
+Status: accepted, 2026-10-08; amended 2026-10-20 by 0011
 
 Store each standard's original CDE cluster code, and add a cluster alias table mapping ELA cluster 3 to cluster 2. Progressions, joins, and queries use the merged cluster.
 
@@ -15,3 +15,9 @@ The misspelling follows a batch of entries, not the subject area. Grades 6–8 a
 Without the alias, a query on cluster 2 alone leaves a three-grade gap in the middle of the L.1 and L.2 progressions. When filtering downloads by cluster, request `c2=2,3`. Full-subject downloads already include both.
 
 `cacs_codes.py` flags this automatically as a possible duplicate (labels that match after dropping a plural s). Other subjects may have similar duplicates; check its warnings for each subject.
+
+Amendment, 2026-10-20 (0011)
+
+The scraped records give the ELA cluster as its label ("Conventions of Standards English"), not its code. The loader looks the code up in `docs/reference/codes.csv` by subject, parameter c2, and label, stores that code as the original, and then applies the alias. A label with no match in `codes.csv` stops the load; the loader does not guess.
+
+In math, "Cluster" is a text section (`text_Cluster`), not a filter label, so this alias table does not apply there.

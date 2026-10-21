@@ -1,6 +1,6 @@
 0007 Curated CSVs are the source of truth; the database is rebuilt from them
 
-Status: accepted, 2026-10-13
+Status: accepted, 2026-10-13; amended 2026-10-20 by 0011
 
 Keep all inputs as plain files in git: downloaded CDE CSVs in `data/raw/`, hand-reviewed concepts and edges in `data/curated/`. `src/load.py` rebuilds `data/build/standards.db` from them. The database file is not committed.
 
@@ -9,3 +9,9 @@ SQLite files are binary, so git cannot show what changed inside one. CSVs show e
 Rebuilding from files also means a bad load or schema change is undone by fixing the input and rerunning, not by repairing the database.
 
 Raw CDE downloads are committed with the download date in the filename. The ELA download was 568 rows, small enough for git, and keeping the exact files used makes later changes on the CDE site detectable by diffing a new download against the old one.
+
+Amendment, 2026-10-20 (0011)
+
+`data/raw/` now also holds `<subject>_records_<date>.csv`, written by `scripts/scrape_cacs_records.py`. Unlike the CSV downloads, it is script output: if the scraper has a bug, the file is wrong, and the HTML pages it was read from are not kept. Whether to commit those pages as well is open (0011).
+
+The two kinds of raw file use different encodings. Records files are UTF-8; `dl=1` CSVs are cp1252. Every script names the encoding when it opens either one.

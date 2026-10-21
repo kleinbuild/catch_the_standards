@@ -1,6 +1,6 @@
 0006 Model relatedness as typed, directed edges plus concept tags, in SQLite
 
-Status: proposed, 2026-10-13
+Status: proposed, 2026-10-13; amended 2026-10-20 by 0011 and 0012
 
 Store relationships between standards as rows in an `edges` table (from, to, type, weight, source, reviewed), and describe what each standard involves through tags against a hand-built `concepts` list. Use SQLite.
 
@@ -19,3 +19,11 @@ Edge sources, from most to least trusted:
 SQLite is enough at this size. Recursive queries can walk prerequisite chains, and `networkx` can read the tables for analysis or diagrams. A graph database is not needed.
 
 Not decided: the concept list itself, whether to seed it from an existing learning map (Dynamic Learning Maps, Core Content Connectors, Achieve the Core coherence map; none checked yet), and the exact edge types.
+
+Amendment, 2026-10-20 (0011, 0012)
+
+`from` and `to` in the edges table are CDE record IDs, not identifiers. An identifier can name several records (A-CED.1 is a separate record in five math courses), so an edge on an identifier would not say which one. The same applies to concept tags. Curated CSVs carry the identifier in a column beside the record ID so rows can be read by eye; the loader uses only the record ID.
+
+Citations in standard text name identifiers. Match them on the dash-normalized form (0012), since a citation and the cited standard may write a grade band with different dashes. The current examples (SL.2.5, W.K.3, W.1.3, W.2.3) cite ELA identifiers, which are unique, so each maps to one record.
+
+Not decided: what to do when a cited identifier maps to more than one record, as a citation of a high school math identifier would.
