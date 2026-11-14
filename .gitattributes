@@ -1,0 +1,9 @@
+# Git on Windows normally rewrites line endings in text files (LF in the
+# repository, CRLF in the working folder). For data files that changes the
+# bytes: these CSVs have line breaks inside quoted fields, and the copy on a
+# Windows machine stopped matching the copy on Linux. "-text" tells git to
+# store and check out these files byte for byte.
+data/raw/**       -text
+data/curated/**   -text
+cacs_probe/**     -text
+*.pdf             binary

@@ -27,3 +27,10 @@ cacs_compare/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Source documents are never committed to this public repo (licensing, size).
+# Keep them in the private catch_standards repo or a local folder.
+*.pdf
+
+# Machine-specific settings, e.g. where the Learning Commons files live.
+local_config.toml
