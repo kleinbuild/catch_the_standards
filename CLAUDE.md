@@ -36,16 +36,16 @@ CLAUDE.md, README.md, requirements.txt, .gitignore
 docs/decisions/    one file per decision, numbered; read these before changing data handling
 docs/reference/    glossary.md (project terms); generated CACS_URL_REFERENCE.md, codes.csv, codes.json
 scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE record; the standards source, 0011)
-                   match_csv_to_records.py (pairs dl=1 CSV rows with scraped records; not yet committed)
+                   match_csv_to_records.py (pairs dl=1 CSV rows with scraped records)
                    probe_cacs_ids.py (fetch one HTML results page and report record links and symbols)
                    cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads; ELA only, 0001)
                    math_cross_domain_check.py, show_rows.py (exploratory checks on the math dl=1 CSV)
                    setup_venv.sh, setup_venv.ps1 (create .venv and install requirements)
-src/               schema.sql, load.py (not written yet)
+src/               schema.sql (tables), load.py (rebuilds data/build/standards.db from data/raw; standard library only)
 data/raw/          scraped records files (UTF-8) and dl=1 CSV downloads (cp1252), committed, named with date
 data/curated/      hand-reviewed data: concepts, reviewed edges. The owner's expert work.
 data/build/        standards.db, rebuilt by load.py, never committed
-tests/
+tests/             test_load.py; run with `python -m unittest discover tests`
 ```
 
 
@@ -58,6 +58,9 @@ tests/
 - Keep CDE's own codes and record IDs (e.g. `/cacs/id/web/5531`) on every row, even where we normalize (cluster alias, grade ranges), so any row can be traced back to the site.
 - Similarity (shared words, embeddings) never becomes a prerequisite edge on its own. It can only produce unreviewed suggestions. (0006)
 - Wait at least 1 second between requests to the CDE site.
+- This repo is public. Never commit PDFs or other third-party source documents here. If one must be committed for development, it goes only in the private `catch_standards` repo. Bulk third-party datasets (Learning Commons) are committed to neither; they live in a folder beside the two repos on each development machine.
+- Imported relationships from any outside dataset arrive `reviewed=0` with their own `source` value, like any machine-generated row.
+- The loader stores CDE's text and identifiers as written and does not repair them. Repairs to malformed identifiers and missing parent standards come only from a public dataset, recorded with its source.
 
 
 ## CDE site facts (details and evidence in docs/decisions)
@@ -75,21 +78,37 @@ tests/
 - `/cacs/eld` holds ELD Part I (507 records) and Part II (264), and no Part III. (0005, 0011)
 
 
-## Current state (2026-10-20)
+## Current state (2026-11-14)
 
-Done: bulk download per subject works; filter codes discovered and documented; subject vs search-all comparison run for ELA.
-Bulk downloaded CSV for ELA, ELD, and Math CA standards.
-Setup scripts for the venv written for Git Bash/Linux/macOS and PowerShell; macOS path not yet tested.
-Scraped records for math, ELA, and ELD; every dl=1 CSV row paired with one scraped record (0011).
+Done: scraped records for math, ELA, and ELD are in `data/raw/`, and every dl=1 CSV row pairs with one scraped record (0011; re-run 2026-11-14 with the same counts).
+`src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, identifier parts, grade_min/grade_max, the ELA cluster alias. 22 tests pass.
+`.gitattributes` stores `data/raw/`, `data/curated/`, and `cacs_probe/` byte for byte; git was converting their line endings on Windows.
+Work is on branch `build/loader` here and `dev/private-sources` in the private repo.
 
-Next: commit `scripts/match_csv_to_records.py`. Then write `src/schema.sql` and `src/load.py` (records files to SQLite keyed by record ID, identifier parsing, structural progression edges), following 0011 and 0012.
+Facts found while writing the loader, not yet in a decision record:
+- ELA sub-items are not separate records. No ELA identifier has a letter; 139 ELA records hold lettered lines inside `text_Standard`. The loader splits them into `sub_items`, keyed by record ID plus letter.
+- Five identifiers are malformed on the CDE site and are stored as written with `id_parsed=0`: RL.2..2 (5604), RL.2..3 (5605), ELD.PI.12a.Em/Ex/Br (7276, 7283, 7290; grade 4).
+- 30 of the 32 K–8 math standards that have sub-item records have no record of their own (3.NF.2, 4.NF.3).
+- The ELA asterisk footnote is in `text_Footnote` on 13 records. In math the asterisk appears only in high school (216 records), where it marks modeling standards, so `has_asterisk` means different things by subject.
+- Two sub-item typos in ELA text: "c . Decode" in RF.2.3 and "d.Review" in SL.4.1.
+- The em dash (U+2014) occurs in 33 fields, as punctuation ("Number and Operations—Fractions"). It is not normalized (0012 left this open).
+
+Learning Commons Knowledge Graph (docs.learningcommons.org; files downloaded 2026-11-14, read from the zip, not committed):
+- It has California math, ELA, and ELD frameworks. ELA codes match CDE identifiers directly for 542 of 568. Math codes carry the cluster letter and an HS prefix (3.NF.A.2, HSA-CED.A.1), so 1 of 497 matches as written. ELD codes have another shape and no proficiency level (ELD.4.I.C.12), so 0 of 771 match.
+- 757 `buildsTowards` links between Common Core math standards (Student Achievement Partners coherence map), 303 involving high school. 898 California math standards link to a Common Core standard, 891 at jaccard 1.0. No such links exist for ELA or ELD.
+- It has the parent standards CDE lacks (3.NF.A.2), the correct forms RL.2.2 and RL.2.3, and ELA sub-items as their own items (L.5.1.b).
+- Learning components cover 931 California math standards, and Common Core ELA for K–2 only.
+
+Next: a script that joins CDE record IDs to Learning Commons items and writes a mapping file, listing what does not match. Then structural edges for ELA and ELD, imported math prerequisite edges, and a command-line lookup for ELA and K–8 math.
 
 Open questions:
+- Whether the mapping file and imported edges are committed here or rebuilt on each machine from the Learning Commons download.
+- Whether the math code mapping (drop the cluster letter and HS prefix) is unambiguous for every record, and what the 26 unmatched ELA identifiers have in common (not checked).
+- Whether `cacs_probe/` stays in the repo; it holds scraper test output and one saved CDE results page.
 - What the search-all download's Main Category corresponds to (not checked).
 - Whether to commit the fetched HTML pages next to each records file. (0011)
-- A progression rule for high school math, where identifiers carry no grade. (0005)
 - Whether `query=a` on `/cacs/all` matches every standard in subjects other than ELA.
-- Whether ELD Part III, which `/cacs/eld` does not have, exists anywhere in a form usable for ELD-to-ELA bridge edges. The published CA ELD Standards document is the first place to check; it is also believed, not checked, to have ELD-to-ELA correspondence tables usable as official bridge edges.
-- Availability and licensing of Dynamic Learning Maps, Core Content Connectors, and the Achieve the Core coherence map as prerequisite sources (not checked).
+- ELD-to-ELA bridge edges: Learning Commons has none, and `/cacs/eld` has no Part III. The published CA ELD Standards document is the first place to check; it is believed, not checked, to have ELD-to-ELA correspondence tables.
+- Availability and licensing of Dynamic Learning Maps and Core Content Connectors (not checked).
 - How end users on macOS will get the tool: installing Python and running the setup script, a packaged app, or a hosted web page. The setup scripts are for development and assume comfort with a terminal.
 - Whether Python 3.13 (Debian 13's version) is acceptable on the laptop, or 3.14 should be installed there.
