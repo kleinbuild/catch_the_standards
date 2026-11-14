@@ -1,0 +1,65 @@
+"""
+Tests for the small functions in scripts/join_learning_commons.py.
+
+    python -m unittest discover tests -v
+
+These need no Learning Commons files. The pairing itself is checked by running
+the script and reading its report.
+"""
+import sys
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import join_learning_commons as join  # noqa: E402
+
+
+class CodeRewrite(unittest.TestCase):
+
+    def test_k8_drops_the_cluster_letter(self):
+        self.assertEqual(join.cde_form("3.NF.A.2", ""), "3.NF.2")
+        self.assertEqual(join.cde_form("K.CC.B.4.a", ""), "K.CC.4.a")
+        self.assertEqual(join.cde_form("5.OA.A.2.1", ""), "5.OA.2.1")
+
+    def test_one_letter_domain_is_not_mistaken_for_a_cluster(self):
+        # In K.G.B.6 the domain (G) and the cluster (B) are both one letter.
+        self.assertEqual(join.cde_form("K.G.B.6", ""), "K.G.6")
+        self.assertEqual(join.cde_form("HSG-C.A.2", ""), "G-C.2")
+
+    def test_high_school(self):
+        self.assertEqual(join.cde_form("HSA-CED.A.1", "Algebra I"), "A-CED.1")
+        self.assertEqual(join.cde_form("HSF-BF.B.4.a", ""), "F-BF.4.a")
+
+    def test_california_additions_written_with_a_dot(self):
+        self.assertEqual(join.cde_form("HSF.LE.A.4.1", "Algebra II"), "F-LE.4.1")
+        self.assertEqual(join.cde_form("HSG.GMD.5", "Geometry"), "G-GMD.5")   # no cluster letter
+
+    def test_course_numbered_standards(self):
+        self.assertEqual(join.cde_form("17.0", "Calculus"), "Calculus.17.0")
+        self.assertEqual(join.cde_form("9.0", "Statistics and Probability (AP)"), "AP-Prob&Stats.9.0")
+
+    def test_codes_with_nothing_to_drop_are_left_alone(self):
+        for code in ("2.NBT.7.1", "MP1", "3.NF.A"):
+            self.assertEqual(join.cde_form(code, ""), code)
+
+
+class TextCheck(unittest.TestCase):
+
+    def test_same_despite_dashes_and_quotes(self):
+        verdict, _ = join.text_check("ten ones—called a “ten.”", 'ten ones - called a "ten."')
+        self.assertEqual(verdict, "same")
+
+    def test_contained(self):
+        # CDE puts the parent's sentence in front of a math sub-item.
+        cde = "Understand the relationship between numbers and quantities. Count objects."
+        self.assertEqual(join.text_check(cde, "Count objects.")[0], "one contains the other")
+
+    def test_differs(self):
+        self.assertEqual(join.text_check("Use definite integrals.", "Compute integrals by hand.")[0],
+                         "differs")
+
+
+if __name__ == "__main__":
+    unittest.main()
