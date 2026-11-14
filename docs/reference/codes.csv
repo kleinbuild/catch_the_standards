@@ -1,0 +1,336 @@
+subject,param,level,code,label
+arts,c0,Discipline,1,Dance
+arts,c0,Discipline,2,Media Arts
+arts,c0,Discipline,3,Music
+arts,c0,Discipline,4,Theatre
+arts,c0,Discipline,5,Visual Arts
+arts,c1,Subdiscipline,1,Composition and Theory
+arts,c1,Subdiscipline,2,Ensembles
+arts,c1,Subdiscipline,3,Harmonizing Instruments
+arts,c1,Subdiscipline,4,Technology
+arts,c1,Subdiscipline,5,TK-8
+arts,c2,Artistic Process,1,Creating
+arts,c2,Artistic Process,2,Performing
+arts,c2,Artistic Process,3,Presenting (Visual Arts only)
+arts,c2,Artistic Process,4,Producing (Media Arts only)
+arts,c2,Artistic Process,5,Responding
+arts,c2,Artistic Process,6,Connecting
+arts,c3,Anchor Standard,1,1: Generate and conceptualize artistic ideas and work
+arts,c3,Anchor Standard,2,2: Organize and develop artistic ideas and work
+arts,c3,Anchor Standard,3,3: Refine and complete artistic work
+arts,c3,Anchor Standard,4,"4. Select, analyze, and interpret artistic work for presentation"
+arts,c3,Anchor Standard,5,5: Develop and refine artistic techniques and work for presentation
+arts,c3,Anchor Standard,6,6: Convey meaning through the presentation of artistic work
+arts,c3,Anchor Standard,7,7: Perceive and analyze artistic work
+arts,c3,Anchor Standard,8,8: Interpret intent and meaning in artistic work
+arts,c3,Anchor Standard,9,9: Apply criteria to evaluate artistic work
+arts,c3,Anchor Standard,10,10: Synthesize and relate knowledge and personal experiences to make art
+arts,c3,Anchor Standard,11,"11: Relate artistic ideas and works with societal, cultural, and historical context to deepen understanding"
+cs,c0,Concept,1,Algorithms & Programming
+cs,c0,Concept,2,Computing Systems
+cs,c0,Concept,3,Data & Analysis
+cs,c0,Concept,4,Impacts of Computing
+cs,c0,Concept,5,Networks & the Internet
+cs,c1,Subconcept,1,Algorithms
+cs,c1,Subconcept,2,"Collection, Visualization, & Transformation"
+cs,c1,Subconcept,3,Control
+cs,c1,Subconcept,4,Culture
+cs,c1,Subconcept,5,Cybersecurity
+cs,c1,Subconcept,6,Devices
+cs,c1,Subconcept,7,Hardware & Software
+cs,c1,Subconcept,8,Inference & Models
+cs,c1,Subconcept,9,Modularity
+cs,c1,Subconcept,10,Network Communication & Organization
+cs,c1,Subconcept,11,Program Development
+cs,c1,Subconcept,12,"Safety, Law, & Ethics"
+cs,c1,Subconcept,13,Social Interactions
+cs,c1,Subconcept,14,Storage
+cs,c1,Subconcept,15,Troubleshooting
+cs,c1,Subconcept,16,Variables
+cs,c2,Practice(s),1,Fostering an Inclusive Computing Culture
+cs,c2,Practice(s),2,Collaborating Around Computing
+cs,c2,Practice(s),3,Recognizing and Defining Computational Problems
+cs,c2,Practice(s),4,Developing and Using Abstractions
+cs,c2,Practice(s),5,Creating Computational Artifacts
+cs,c2,Practice(s),6,Testing and Refining Computational Artifacts
+cs,c2,Practice(s),7,Communicating About Computing
+ela,c0,Subject Area,1,"English Language Arts & Literacy in History/Social Studies, Science, and Technical Subjects (K–5)"
+ela,c0,Subject Area,2,English Language Arts (6–12)
+ela,c0,Subject Area,3,"Literacy in History/Social Studies, Science, and Technical Subjects (6–12)"
+ela,c1,Domain,1,Language
+ela,c1,Domain,2,Reading: Foundational Skills
+ela,c1,Domain,3,Reading: Informational Text
+ela,c1,Domain,4,Reading: Literacy in History/Social Studies
+ela,c1,Domain,5,Reading: Literacy in Science and Technical
+ela,c1,Domain,6,Reading: Literature
+ela,c1,Domain,7,Speaking and Listening
+ela,c1,Domain,8,Writing
+ela,c1,Domain,9,"Writing: Literacy in History/Social Studies, Science, and Technical Subjects"
+ela,c2,Cluster,1,Comprehension and Collaboration
+ela,c2,Cluster,2,Conventions of Standard English
+ela,c2,Cluster,3,Conventions of Standards English
+ela,c2,Cluster,4,Craft and Structure
+ela,c2,Cluster,5,Fluency
+ela,c2,Cluster,6,Integration of Knowledge and Ideas
+ela,c2,Cluster,7,Key Ideas and Details
+ela,c2,Cluster,8,Knowledge of Language
+ela,c2,Cluster,9,Phonics and Word Recognition
+ela,c2,Cluster,10,Phonological Awareness
+ela,c2,Cluster,11,Presentation of Knowledge and Ideas
+ela,c2,Cluster,12,Print Concepts
+ela,c2,Cluster,13,Production and Distribution of Writing
+ela,c2,Cluster,14,Range of Reading and Level of Text Complexity
+ela,c2,Cluster,15,Range of Writing
+ela,c2,Cluster,16,Research to Build and Present Knowledge
+ela,c2,Cluster,17,Text Types and Purposes
+ela,c2,Cluster,18,Vocabulary Acquisition and Use
+eld,c0,Critical Principle,1,Part I: Interacting in Meaningful Ways
+eld,c0,Critical Principle,2,Part II: Learning About How English Works
+eld,c1,Cluster,1,A. Collaborative
+eld,c1,Cluster,2,A. Structuring Cohesive Texts
+eld,c1,Cluster,3,B. Expanding and Enriching Ideas
+eld,c1,Cluster,4,B. Interpretive
+eld,c1,Cluster,5,C. Connecting and Condensing Ideas
+eld,c1,Cluster,6,C. Productive
+eld,c2,Proficiency Level,1,Bridging
+eld,c2,Proficiency Level,2,Emerging
+eld,c2,Proficiency Level,3,Expanding
+eld,c3,Content Strand,1,Adapting language choices
+eld,c3,Content Strand,2,Analyzing language choices
+eld,c3,Content Strand,3,Composing/Writing
+eld,c3,Content Strand,4,Condensing ideas
+eld,c3,Content Strand,5,Connecting ideas
+eld,c3,Content Strand,6,Evaluating language choices
+eld,c3,Content Strand,7,Exchanging information and ideas
+eld,c3,Content Strand,8,Exchanging information/ideas
+eld,c3,Content Strand,9,Interacting via written English
+eld,c3,Content Strand,10,Justifying/arguing
+eld,c3,Content Strand,11,Listening actively
+eld,c3,Content Strand,12,Modifying to add details
+eld,c3,Content Strand,13,Offering opinions
+eld,c3,Content Strand,14,Presenting
+eld,c3,Content Strand,15,Reading/viewing closely
+eld,c3,Content Strand,16,Selecting language resources
+eld,c3,Content Strand,17,Supporting opinions
+eld,c3,Content Strand,18,Supporting opinions and persuading others
+eld,c3,Content Strand,19,Understanding cohesion
+eld,c3,Content Strand,20,Understanding text structure
+eld,c3,Content Strand,21,Using nouns and noun phrases
+eld,c3,Content Strand,22,Using verbs and verb phrases
+eld,c3,Content Strand,23,Writing
+health,c0,Content Area,1,"Alcohol, Tobacco, and Other Drugs"
+health,c0,Content Area,2,Growth and Development
+health,c0,Content Area,3,"Growth, Development, and Sexual Health"
+health,c0,Content Area,4,"Injury, Prevention, and Safety"
+health,c0,Content Area,5,"Mental, Emotional, and Social Health"
+health,c0,Content Area,6,Nutrition and Physical Activity
+health,c0,Content Area,7,Personal and Community Health
+health,c1,Overarching Content Standard,1,1: Essential Concepts
+health,c1,Overarching Content Standard,2,2: Analyzing Influences
+health,c1,Overarching Content Standard,3,3: Accessing Valid Health Information
+health,c1,Overarching Content Standard,4,4: Interpersonal Communication
+health,c1,Overarching Content Standard,5,5: Decision Making
+health,c1,Overarching Content Standard,6,6: Goal Setting
+health,c1,Overarching Content Standard,7,7: Practicing Health-Enhancing Behaviors
+health,c1,Overarching Content Standard,8,8: Health Promotion
+history,c0,Course,1,"Learning and Working Now and Long Ago, Grade K"
+history,c0,Course,2,"A Child’s Place in Time and Space, Grade 1"
+history,c0,Course,3,"People Who Make a Difference, Grade 2"
+history,c0,Course,4,"Continuity and Change, Grade 3"
+history,c0,Course,5,"California: A Changing State, Grade 4"
+history,c0,Course,6,"United States History and Geography: Making a New Nation, Grade 5"
+history,c0,Course,7,"World History and Geography: Ancient Civilizations, Grade 6"
+history,c0,Course,8,"World History and Geography: Medieval and Early Modern Times, Grade 7"
+history,c0,Course,9,"United States History and Geography: Growth and Conflict, Grade 8"
+history,c0,Course,10,"World History, Culture, and Geography: The Modern World, Grade 10"
+history,c0,Course,11,"United States History and Geography: Continuity and Change in the Twentieth Century, Grade 11"
+history,c0,Course,12,"Principles of American Democracy, Grade 12"
+history,c0,Course,13,"Principles of Economics, Grade 12"
+math,c0,Domain,1,Arithmetic with Polynomials and Rational Expressions
+math,c0,Domain,2,Building Functions
+math,c0,Domain,3,Circles
+math,c0,Domain,4,Conditional Probability and the Rules of Probability
+math,c0,Domain,5,Congruence
+math,c0,Domain,6,Counting and Cardinality
+math,c0,Domain,7,Creating Equations
+math,c0,Domain,8,Expressing Geometric Properties with Equations
+math,c0,Domain,9,Expressions and Equations
+math,c0,Domain,10,Functions
+math,c0,Domain,11,Geometric Measurement and Dimension
+math,c0,Domain,12,Geometry
+math,c0,Domain,13,Interpreting Categorical and Quantitative Data
+math,c0,Domain,14,Interpreting Functions
+math,c0,Domain,15,"Linear, Quadratic, and Exponential Models"
+math,c0,Domain,16,Making Inferences and Justifying Conclusions
+math,c0,Domain,17,Measurement and Data
+math,c0,Domain,18,Modeling with Geometry
+math,c0,Domain,19,Number and Operations in Base Ten
+math,c0,Domain,20,Number and Operations—Fractions
+math,c0,Domain,21,Operations and Algebraic Thinking
+math,c0,Domain,22,Quantities
+math,c0,Domain,23,Ratios and Proportional Relationships
+math,c0,Domain,24,Reasoning with Equations and Inequalities
+math,c0,Domain,25,Seeing Structure in Expressions
+math,c0,Domain,26,"Similarity, Right Triangles, and Trigonometry"
+math,c0,Domain,27,Statistics and Probability
+math,c0,Domain,28,The Complex Number System
+math,c0,Domain,29,The Number System
+math,c0,Domain,30,The Real Number System
+math,c0,Domain,31,Trigonometric Functions
+math,c0,Domain,32,Using Probability to Make Decisions
+math,c1,Discipline,1,Algebra I
+math,c1,Discipline,2,Algebra II
+math,c1,Discipline,3,Calculus
+math,c1,Discipline,4,Geometry
+math,c1,Discipline,5,Math I
+math,c1,Discipline,6,Math II
+math,c1,Discipline,7,Math III
+math,c1,Discipline,8,Statistics and Probability
+math,c1,Discipline,9,Statistics and Probability (AP)
+math,c2,Conceptual Category,1,Algebra
+math,c2,Conceptual Category,2,Functions
+math,c2,Conceptual Category,3,Geometry
+math,c2,Conceptual Category,4,Number and Quantity
+math,c2,Conceptual Category,5,Statistics and Probability
+pe,c0,Cluster,1,Aerobic Capacity
+pe,c0,Cluster,2,Assessment
+pe,c0,Cluster,3,Body Composition
+pe,c0,Cluster,4,Body Management
+pe,c0,Cluster,5,Combinations of Movement Patterns and Skills
+pe,c0,Cluster,6,Fitness Concepts
+pe,c0,Cluster,7,Flexibility
+pe,c0,Cluster,8,Group Dynamics
+pe,c0,Cluster,9,Locomotor Movement
+pe,c0,Cluster,10,Manipulative Skills
+pe,c0,Cluster,11,Movement Concepts
+pe,c0,Cluster,12,Muscular Strength/Endurance
+pe,c0,Cluster,13,Rhythmic Skills
+pe,c0,Cluster,14,Self-Responsibility
+pe,c0,Cluster,15,Social Interaction
+library,c0,Overarching Standard,1,1. Students access information
+library,c0,Overarching Standard,2,2. Students evaluate information
+library,c0,Overarching Standard,3,3. Students use information
+library,c0,Overarching Standard,4,4. Students integrate information literacy skills into all areas of learning
+science,c0,Disciplinary Core Idea,1,ESS1.A: The Universe and its Stars
+science,c0,Disciplinary Core Idea,2,ESS1.B: Earth and the Solar System
+science,c0,Disciplinary Core Idea,3,ESS1.C: The History of Planet Earth
+science,c0,Disciplinary Core Idea,4,ESS2.A: Earth Materials and Systems
+science,c0,Disciplinary Core Idea,5,ESS2.B: Plate Tectonics and Large-Scale System Interactions
+science,c0,Disciplinary Core Idea,6,ESS2.C: The Roles of Water in Earth's Surface Processes
+science,c0,Disciplinary Core Idea,7,ESS2.D: Weather and Climate
+science,c0,Disciplinary Core Idea,8,ESS2.E: Biogeology
+science,c0,Disciplinary Core Idea,9,ESS3.A: Natural Resources
+science,c0,Disciplinary Core Idea,10,ESS3.B: Natural Hazards
+science,c0,Disciplinary Core Idea,11,ESS3.C: Human Impacts on Earth Systems
+science,c0,Disciplinary Core Idea,12,ESS3.D: Global Climate Change
+science,c0,Disciplinary Core Idea,13,ETS1.A: Defining and Delimiting Engineering Problems
+science,c0,Disciplinary Core Idea,14,ETS1.B: Developing Possible Solutions
+science,c0,Disciplinary Core Idea,15,ETS1.C: Optimizing the Design Solution
+science,c0,Disciplinary Core Idea,16,LS1.A: Structure and Function
+science,c0,Disciplinary Core Idea,17,LS1.B: Growth and Development of Organisms
+science,c0,Disciplinary Core Idea,18,LS1.C: Organization for Matter and Energy Flow in Organisms
+science,c0,Disciplinary Core Idea,19,LS1.D: Information Processing
+science,c0,Disciplinary Core Idea,20,LS2.A: Interdependent Relationships in Ecosystems
+science,c0,Disciplinary Core Idea,21,LS2.B: Cycles of Matter and Energy Transfer in Ecosystems
+science,c0,Disciplinary Core Idea,22,"LS2.C: Ecosystem Dynamics, Functioning, and Resilience"
+science,c0,Disciplinary Core Idea,23,LS2.D: Social Interactions and Group Behavior
+science,c0,Disciplinary Core Idea,24,LS3.A: Inheritance of Traits
+science,c0,Disciplinary Core Idea,25,LS3.B: Variation of Traits
+science,c0,Disciplinary Core Idea,26,LS4.A: Evidence of Common Ancestry and Diversity
+science,c0,Disciplinary Core Idea,27,LS4.B: Natural Selection
+science,c0,Disciplinary Core Idea,28,LS4.C: Adaptation
+science,c0,Disciplinary Core Idea,29,LS4.D: Biodiversity and Humans
+science,c0,Disciplinary Core Idea,30,PS1.A: Structure and Properties of Matter
+science,c0,Disciplinary Core Idea,31,PS1.B: Chemical Reactions
+science,c0,Disciplinary Core Idea,32,PS1.C: Nuclear Processes
+science,c0,Disciplinary Core Idea,33,PS2.A: Forces and Motion
+science,c0,Disciplinary Core Idea,34,PS2.B: Types of Interactions
+science,c0,Disciplinary Core Idea,35,PS3.A: Definitions of Energy
+science,c0,Disciplinary Core Idea,36,PS3.B: Conservation of Energy and Energy Transfer
+science,c0,Disciplinary Core Idea,37,PS3.C: Relationship between Energy and Forces
+science,c0,Disciplinary Core Idea,38,PS3.D: Energy in Chemical Processes
+science,c0,Disciplinary Core Idea,39,PS4.A: Wave Properties
+science,c0,Disciplinary Core Idea,40,PS4.B: Electromagnetic Radiation
+science,c0,Disciplinary Core Idea,41,PS4.C: Information Technologies and Instrumentation
+science,c1,Cross Cutting Concept,1,CCC-1: Patterns
+science,c1,Cross Cutting Concept,2,CCC-2: Cause and Effect: Mechanism and Explanation
+science,c1,Cross Cutting Concept,3,"CCC-3: Scale, Proportion, and Quantity"
+science,c1,Cross Cutting Concept,4,CCC-4: Systems and Systems Models
+science,c1,Cross Cutting Concept,5,"CCC-5: Energy and Matter: Flows, Cycles, and Conservation"
+science,c1,Cross Cutting Concept,6,CCC-6: Structure and Function
+science,c1,Cross Cutting Concept,7,CCC-7: Stability and Change
+science,c2,Science & Engineering Practice,1,SEP-1: Asking Questions and Defining Problems
+science,c2,Science & Engineering Practice,2,SEP-2: Developing and Using Models
+science,c2,Science & Engineering Practice,3,SEP-3: Planning and Carrying Out Investigations
+science,c2,Science & Engineering Practice,4,SEP-4: Analyzing and Interpreting Data
+science,c2,Science & Engineering Practice,5,SEP-5: Using Mathematics and Computational Thinking
+science,c2,Science & Engineering Practice,6,SEP-6: Constructing Explanations and Designing Solutions
+science,c2,Science & Engineering Practice,7,SEP-7: Engaging in Argument From Science
+science,c2,Science & Engineering Practice,8,"SEP-8: Obtaining, Evaluating, and Communicating Information"
+science,c3,Content Area,1,Earth and Space Science
+science,c3,Content Area,2,"Engineering, Technology, and Applications of Science"
+science,c3,Content Area,3,Life Science
+science,c3,Content Area,4,Physical Science
+wl,c0,Strand,1,Communication
+wl,c0,Strand,2,Connections
+wl,c0,Strand,3,Cultures
+wl,c1,Substrand,1,Connections to Other Disciplines
+wl,c1,Substrand,2,Cultural Comparisons
+wl,c1,Substrand,3,"Cultural Products, Practices, and Perspectives"
+wl,c1,Substrand,4,Culturally Appropriate Interaction
+wl,c1,Substrand,5,Diverse Perspectives and Distinctive Viewpoints
+wl,c1,Substrand,6,Intercultural Influences
+wl,c1,Substrand,7,Interpersonal Communication
+wl,c1,Substrand,8,Interpretive Communication
+wl,c1,Substrand,9,Language Comparisons in Service of Communication
+wl,c1,Substrand,10,Presentational Communication
+wl,c1,Substrand,11,Productive Structures in Service of Communication
+wl,c1,Substrand,12,Receptive Structures in Service of Communication
+wl,c1,Substrand,13,Settings for Communication
+all,carea,Content Area,0,All Content Areas
+all,carea,Content Area,5,Arts
+all,carea,Content Area,11,Career Technical Education – Anchors
+all,carea,Content Area,12,Career Technical Education – Pathways
+all,carea,Content Area,1,Computer Science
+all,carea,Content Area,7,English Language Arts
+all,carea,Content Area,10,English Language Development
+all,carea,Content Area,3,Health Education
+all,carea,Content Area,4,History–Social Science
+all,carea,Content Area,2,Mathematics
+all,carea,Content Area,9,Physical Education
+all,carea,Content Area,8,School Library
+all,carea,Content Area,13,Science (CA NGSS)
+all,carea,Content Area,6,World Languages
+all,mingrade,Minimum Grade,0,TK & K
+all,mingrade,Minimum Grade,1,1st
+all,mingrade,Minimum Grade,2,2nd
+all,mingrade,Minimum Grade,3,3rd
+all,mingrade,Minimum Grade,4,4th
+all,mingrade,Minimum Grade,5,5th
+all,mingrade,Minimum Grade,6,6th
+all,mingrade,Minimum Grade,7,7th
+all,mingrade,Minimum Grade,8,8th
+all,mingrade,Minimum Grade,9,9th
+all,mingrade,Minimum Grade,10,10th
+all,mingrade,Minimum Grade,11,11th
+all,mingrade,Minimum Grade,12,12th
+all,maxgrade,Maximum Grade,0,TK & K
+all,maxgrade,Maximum Grade,1,1st
+all,maxgrade,Maximum Grade,2,2nd
+all,maxgrade,Maximum Grade,3,3rd
+all,maxgrade,Maximum Grade,4,4th
+all,maxgrade,Maximum Grade,5,5th
+all,maxgrade,Maximum Grade,6,6th
+all,maxgrade,Maximum Grade,7,7th
+all,maxgrade,Maximum Grade,8,8th
+all,maxgrade,Maximum Grade,9,9th
+all,maxgrade,Maximum Grade,10,10th
+all,maxgrade,Maximum Grade,11,11th
+all,maxgrade,Maximum Grade,12,12th
+all,order,Order By,1,Grade Range
+all,order,Order By,4,Category
+all,order,Order By,2,Content Area
+all,order,Order By,3,Standard Identifier
+all,perpage,Results Per Page,10,10
+all,perpage,Results Per Page,25,25
+all,perpage,Results Per Page,100,100
