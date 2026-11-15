@@ -59,6 +59,14 @@ standards and each is matched to its CDE record. The note belongs to the ELD
 standard as a whole (ELD Part I, grade 4, standard 12), not to one proficiency
 level or letter, and it is written out that way.
 
+It also collects learning components: short statements of one teachable
+piece of a standard ("Recognize addition of fractions as joining parts
+referring to the same whole"). Learning Commons attaches them to California
+math items (written by Achievement Network) and to Common Core ELA items for
+grades K-2 (written by Learning Commons), which are followed to the California
+ELA record or lettered sub-item with the same code. A component attached to a
+high school standard's course-free copy is attached to each course's record.
+
 Writes to data/derived/:
   learning_commons_map.csv               one row per pairing (or per unmatched record)
   learning_commons_unmapped.csv          California items no CDE record pairs with
@@ -69,6 +77,8 @@ Writes to data/derived/:
   learning_commons_edges_unresolved.csv  links not written, and why
   learning_commons_eld_ela.csv           ELA standards listed against each ELD standard; the loader reads this
   learning_commons_eld_ela_unresolved.csv  pieces of those notes that matched no ELA record
+  learning_commons_components.csv        the text of each learning component used; the loader reads this
+  learning_commons_component_links.csv   which record or sub-item each component supports; the loader reads this
   learning_commons_source.json           which Learning Commons files were read
 """
 import argparse
@@ -173,14 +183,26 @@ def read_california_items(graph_dir):
         if not p.exists():
             sys.exit(f"Cannot find {p}\nSee the top of this script for where the "
                      "Learning Commons files go.")
-    items, frameworks, ccss = {}, set(), {}
+    items, frameworks, ccss, ccss_ela, components = {}, set(), {}, {}, {}
     with open(nodes, encoding="utf-8") as f:
         for line in f:
-            # cheap test before the slower json.loads
+            # cheap tests before the slower json.loads
+            if '"LearningComponent"' in line:
+                node = json.loads(line)
+                p = node["properties"]
+                components[node["identifier"]] = {
+                    "subject": SUBJECTS.get(p.get("academicSubject"), ""),
+                    "text": " ".join((p.get("description") or "").split()),
+                    "author": p.get("author") or ""}
+                continue
             if '"California"' not in line and '"Multi-State"' not in line:
                 continue
             node = json.loads(line)
             p = node["properties"]
+            if (p.get("jurisdiction") == "Multi-State" and "StandardsFrameworkItem" in node["labels"]
+                    and p.get("academicSubject") == "English Language Arts"):
+                ccss_ela[node["identifier"]] = normalize_identifier((p.get("statementCode") or "").strip())
+                continue
             if (p.get("jurisdiction") == "Multi-State" and p.get("academicSubject") == "Mathematics"
                     and "StandardsFrameworkItem" in node["labels"]):
                 ccss[node["identifier"]] = (p.get("statementCode") or "").strip()
@@ -200,15 +222,18 @@ def read_california_items(graph_dir):
                     "text": p.get("description") or "",
                     "notes": (p.get("notes") or "").strip(),
                 }
-    parent, builds, same_as = {}, [], defaultdict(list)
+    parent, builds, same_as, supports = {}, [], defaultdict(list), []
     with open(rels, encoding="utf-8") as f:
         for line in f:
             if "hasChild" not in line and "buildsTowards" not in line \
-                    and "hasStandardAlignment" not in line:
+                    and "hasStandardAlignment" not in line and "supports" not in line:
                 continue
             rel = json.loads(line)
             a, b = rel["source_identifier"], rel["target_identifier"]
-            if rel["label"] == "hasChild" and b in items:
+            if rel["label"] == "supports":
+                if a in components and (b in items or b in ccss_ela):
+                    supports.append((a, b))
+            elif rel["label"] == "hasChild" and b in items:
                 parent[b] = a
             elif rel["label"] == "buildsTowards" and a in ccss and b in ccss:
                 builds.append((a, b, rel["identifier"]))
@@ -227,7 +252,8 @@ def read_california_items(graph_dir):
     children = defaultdict(list)
     for child, up in parent.items():
         children[up].append(child)
-    graph = {"ccss": ccss, "builds": builds, "same_as": same_as, "children": children}
+    graph = {"ccss": ccss, "builds": builds, "same_as": same_as, "children": children,
+             "ccss_ela": ccss_ela, "components": components, "supports": supports}
     return items, graph, nodes, rels
 
 
@@ -328,6 +354,57 @@ def eld_ela_rows(items, records):
                          r["identifier"], r["is_placeholder"], segment, item["code"],
                          item["case_uuid"], item["lc_identifier"], "learning_commons_notes", 0])
     return rows, unresolved
+
+
+def component_rows(rows, items, graph, parents, parent_ids):
+    """Returns (rows for learning_commons_components.csv,
+                rows for learning_commons_component_links.csv,
+                how many attachments found no row to land on)."""
+    records_of, info = math_records_of(rows)
+    for parent in parents:
+        info[parent[0]] = (parent[2], parent[3])
+    copies = defaultdict(list)
+    for item in items.values():
+        if item["subject"] == "math" and item["code"]:
+            copies[item["code"]].append(item["lc_identifier"])
+    ela_rows = defaultdict(set)             # ELA code -> {(record_id, letter)}
+    ela_name = {}
+    for r in rows:
+        if r[2] == "ela" and r[6]:
+            ela_rows[r[7]].add((r[0], r[1]))
+            ela_name[(r[0], r[1])] = r[3] + r[1]
+
+    def math_targets(item_id):
+        """(row IDs, note) for a California math item."""
+        direct = set(records_of[item_id]) | set(parent_ids.get(item_id, {}))
+        if direct or items[item_id]["course"]:
+            return direct, ""
+        found = set()                       # the course-free copy of a high school standard
+        for other in copies[items[item_id]["code"]]:
+            found |= set(records_of[other]) | set(parent_ids.get(other, {}))
+        return found, "attached by Learning Commons to this standard's course-free copy"
+
+    links, lost, seen = [], 0, set()
+    for component, target in graph["supports"]:
+        if target in items:
+            if items[target]["subject"] != "math":
+                continue
+            row_ids, note = math_targets(target)
+            landed = [(rid, "", info[rid][0]) for rid in sorted(row_ids)]
+        else:
+            landed = [(rid, letter, ela_name[(rid, letter)])
+                      for rid, letter in sorted(ela_rows[graph["ccss_ela"][target]])]
+            note = "attached by Learning Commons to the Common Core standard with this code"
+        if not landed:
+            lost += 1
+        for rid, letter, name in landed:
+            if (rid, letter, component) not in seen:
+                seen.add((rid, letter, component))
+                links.append([rid, letter, component, name, note, "learning_commons", 0])
+    used = sorted({link[2] for link in links})
+    comps = [[c, graph["components"][c]["subject"], graph["components"][c]["text"],
+              graph["components"][c]["author"], "learning_commons"] for c in used]
+    return comps, sorted(links, key=lambda l: (l[0], l[1], l[2])), lost
 
 
 def math_records_of(rows):
@@ -602,6 +679,7 @@ def main():
     parents, parent_ids = build_parents(rows, items, graph, records)
     edges, unresolved, candidates = import_edges(rows, items, graph, parents, parent_ids)
     eld_ela, eld_ela_unresolved = eld_ela_rows(items, records)
+    comps, comp_links, comp_lost = component_rows(rows, items, graph, parents, parent_ids)
 
     args.out.mkdir(parents=True, exist_ok=True)
     with open(args.out / "learning_commons_map.csv", "w", newline="", encoding="utf-8") as f:
@@ -620,6 +698,15 @@ def main():
         for i in unmapped:
             w.writerow([i["subject"], i["code"], i["type"], i["course"], " ".join(i["grades"]),
                         i["parent_code"], i["case_uuid"], i["lc_identifier"]])
+    with open(args.out / "learning_commons_components.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["component_id", "subject", "text", "author", "source"])
+        w.writerows(comps)
+    with open(args.out / "learning_commons_component_links.csv", "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["record_id", "letter", "component_id", "identifier", "note", "source", "reviewed"])
+        w.writerows(comp_links)
     text_of = {r["record_id"]: r["text_standard"] for r in records}
     with open(args.out / "learning_commons_text_differs.csv", "w", newline="",
               encoding="utf-8") as f:
@@ -672,7 +759,9 @@ def main():
                       "Provided by Learning Commons under CC BY 4.0; standards data from the "
                       "publishers named in each item's attributionStatement. Learning "
                       "progressions (builds-towards links) are provided under CC0 from "
-                      "Student Achievement Partners.")
+                      "Student Achievement Partners. Math learning components are provided "
+                      "under CC BY 4.0 from Achievement Network; ELA learning components are "
+                      "provided by Learning Commons under CC BY 4.0.")
     (args.out / "learning_commons_source.json").write_text(json.dumps(source, indent=2) + "\n",
                                                            encoding="utf-8")
 
@@ -703,6 +792,12 @@ def main():
           f"{len(candidates)} sub-item pairs they could also mean are listed, not loaded)")
     for why, n in Counter(u[2] or u[3] for u in unresolved).most_common():
         print(f"    {n:5}  not written: {why}")
+    print(f"\nlearning components: {len(comps)} used, in {len(comp_links)} attachments")
+    for subject in ("math", "ela"):
+        ids = {l[2] for l in comp_links if graph["components"][l[2]]["subject"] == subject}
+        targets = {(l[0], l[1]) for l in comp_links if l[2] in ids}
+        print(f"    {subject:5} {len(ids):5} components on {len(targets)} records or sub-items")
+    print(f"    {comp_lost:5}  attachments in Learning Commons found no row to land on")
     eld_items = {r[9] for r in eld_ela}
     print(f"\nELA standards listed against ELD standards: {len(eld_ela)} pairs, "
           f"from the notes of {len(eld_items)} ELD items")

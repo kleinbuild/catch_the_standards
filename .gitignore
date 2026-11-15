@@ -32,5 +32,12 @@ desktop.ini
 # Keep them in the private catch_standards repo or a local folder.
 *.pdf
 
+# Learning component text and attachments (about 1.8 MB of Learning Commons /
+# Achievement Network text, CC BY 4.0). Held out of the repo until the owner
+# decides whether third-party text of this size belongs in a public repo.
+# scripts/join_learning_commons.py writes both.
+data/derived/learning_commons_components.csv
+data/derived/learning_commons_component_links.csv
+
 # Machine-specific settings, e.g. where the Learning Commons files live.
 local_config.toml

@@ -177,3 +177,26 @@ CREATE TABLE eld_ela_links (
 ) STRICT;
 
 CREATE INDEX idx_eld_ela_links_ela ON eld_ela_links (ela_record_id);
+
+-- Learning components: short statements of one teachable piece of a standard,
+-- written by Achievement Network (math) and Learning Commons (ELA, grades K-2).
+-- They are Learning Commons' own, not the owner's concepts list (0006).
+CREATE TABLE learning_components (
+    component_id  TEXT PRIMARY KEY,      -- Learning Commons identifier
+    subject       TEXT NOT NULL,
+    text          TEXT NOT NULL,
+    author        TEXT NOT NULL,
+    source        TEXT NOT NULL
+) STRICT;
+
+-- Which standard a component supports. letter is '' for the whole record, or
+-- the sub-item letter (ELA).
+CREATE TABLE component_links (
+    record_id     INTEGER NOT NULL REFERENCES standards (record_id),
+    letter        TEXT NOT NULL,
+    component_id  TEXT NOT NULL REFERENCES learning_components (component_id),
+    note          TEXT,
+    source        TEXT NOT NULL,
+    reviewed      INTEGER NOT NULL CHECK (reviewed IN (0, 1)),
+    PRIMARY KEY (record_id, letter, component_id)
+) STRICT;

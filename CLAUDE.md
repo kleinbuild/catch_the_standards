@@ -92,7 +92,8 @@ Done:
 - `python src/lookup.py <identifier>` prints what a standard builds on, with the source of each link.
 - `lookup.py` also shows, for an ELD record, the ELA standards listed against its ELD standard, and for an ELA record, the ELD standards that list it.
 - `python scripts/make_review_sheets.py` wrote six sheets to `data/curated/review/` (how to mark them: the README there). The loader applies decisions from the link sheets where a row has `reviewed=1`: `keep` marks the link reviewed, or adds it with source `owner` if it was a candidate; `reject` leaves it out. Decisions on `pairings.csv` and `eld_ela_notes.csv` are recorded and not yet acted on.
-- 77 tests pass (`python -m unittest discover tests`).
+- Learning components load when their two files are in `data/derived/`: 5,983 components attached in 7,382 places (1,848 math components on 744 records or parent rows; 4,135 ELA components on 200 K–2 records or sub-items). `python src/lookup.py 4.NF.3.a --components` lists them. Both files are in `.gitignore` for now (see open questions), so a fresh clone builds without components until `join_learning_commons.py` is run there.
+- 83 tests pass (`python -m unittest discover tests`); the 5 learning-component tests are skipped where the two files are absent.
 - The cross-check of CSV rows against scraped records (0011) was re-run on 2026-11-14 with the same counts.
 
 Facts found on 2026-11-14, not yet in a decision record:
@@ -114,7 +115,8 @@ Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-1
 - Math text agrees for 512 of 734 records and one text contains the other for 173; 49 differ and are marked in `learning_commons_map.csv`. CDE repeats the parent sentence before a sub-item, and one side or the other omits the worked examples.
 - 757 `buildsTowards` links (Student Achievement Partners coherence map, CC0) join Common Core math standards. 727 are imported as 1,150 edges: 453 between K–8 rows, one per published link, and 697 with a high school row at one or both ends (more than one per published link, because a standard is one row per course). 30 are not imported and are listed in `learning_commons_edges_unresolved.csv`: for 28 the California item has no CDE record (F-TF.3, N-CN.4, G-GMD.2 and others; why CDE lacks them is not checked), and for 2 no California item is rated the same as the Common Core one.
 - High school pairing rule (owner's decision, 2026-11-14): same pathway. Course copies are joined within Algebra I / Geometry / Algebra II and within Math I / II / III, never across. Each later standard is linked from the nearest copy of the earlier standard at or before its own course; a K–8 standard links to every course copy. Treating the course "Statistics and Probability" as following either pathway is an assumption made in the script, not something the owner decided.
-- It has no prerequisite links for ELA or ELD. Learning components cover 931 California math standards, and Common Core ELA for K–2 only.
+- It has no prerequisite links for ELA or ELD.
+- Learning components: math ones are attached to California math items and written by Achievement Network; ELA ones are attached to Common Core ELA items for grades K–2, written by Learning Commons, and are followed to the California record or lettered sub-item with the same code (every code matched). A component on a high school standard's course-free copy is attached to each course's record. 220 attachments found no row to land on; which ones has not been looked at. They are kept apart from the owner's concepts list (0006) and carry no role (introduces, develops, expects mastery).
 - Each of its 209 California ELD standards has a `notes` field listing ELA standards ("W.4.4–5; SL.4.4, 6; L.4.1, 3, 5–6"); the items give the California State Board of Education as author. The join script splits the notes into 2,084 ELD-standard-to-ELA-record pairs, written to `learning_commons_eld_ela.csv` and loaded into the table `eld_ela_links`, all `reviewed=0`. Three notes read "Not applicable at kindergarten" or "at grade 1" and yield nothing. One piece had a stray space ("WHST. 9-10.4-5") and is read anyway. Every other piece matched exactly one ELA record. No RF standard appears in any note.
 - A note belongs to the ELD standard as a whole (part, number, grade), covering every proficiency level and letter, so `eld_ela_links` is keyed that way and is not in `edges`. Between 3 and 43 ELA standards are listed per ELD standard.
 - The notes write the grades 6–8 literacy strands by single grade ("RH.6.1–10"), where CDE has one record for grades 6–8 (RH.6–8.1). They are matched by the grade falling inside the record's range.
@@ -124,11 +126,13 @@ Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-1
 
 Review stage reached 2026-11-14: the sheets are with the owner and none is marked yet. What each sheet holds: `ela_links.csv` 44 next-grade links whose wording is under 30% alike; `eld_links.csv` 48 links where lettering changes and 9 whose wording is under 30% alike; `math_links.csv` 19 links that jump three or more grades and 45 involving the Statistics and Probability course; `math_link_candidates.csv` the 624 set-aside sub-item pairs; `pairings.csv` 58 records (49 math, 9 ELA) whose text differs from their Learning Commons item; `eld_ela_notes.csv` 206 ELD notes, 22 of them (one per part per grade) marked as the sample to compare with the published CA ELD Standards.
 
-Next: act on the owner's decisions as they come. Then learning components as concept tags.
+Next: act on the owner's decisions as they come. Then how teachers will reach the tool (the macOS question below), since every build item of the first slice is now in.
 
 Open questions:
 - Whether the course "Statistics and Probability" should be linked from both pathways, as the join script now does.
 - No link from the course Statistics and Probability back to a pathway course exists in the data, so the "either pathway" assumption affects only the 45 links listed in `math_links.csv`.
+- Whether the two learning-component files (1.8 MB together, text written by Achievement Network and Learning Commons, CC BY 4.0) are committed to this public repo. Until the owner says, they are in `.gitignore`.
+- Whether learning components should seed the owner's concepts list (0006), or stay a separate reference.
 - Links not on any sheet (most of them) stay `reviewed=0`. Whether the owner wants a way to mark whole groups as accepted has not been asked.
 - The 49 math records whose text differs from the paired Learning Commons item have not been read one by one.
 - Whether `cacs_probe/` stays in the repo; it holds scraper test output and one saved CDE results page.

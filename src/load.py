@@ -6,8 +6,8 @@ load.py - rebuild data/build/standards.db from the scraped records files.
 
 Reads the newest data/raw/<subject>_records_<date>.csv for math, ela and eld,
 docs/reference/codes.csv, data/curated/identifier_corrections.csv and, if they
-exist, three files in data/derived/ (learning_commons_parents.csv,
-learning_commons_edges.csv, learning_commons_eld_ela.csv), and the owner's
+exist, the learning_commons_*.csv files in data/derived/ (parents, edges,
+eld_ela, components, component_links), and the owner's
 decisions in data/curated/review/, and writes data/build/standards.db. The old database is replaced, never updated in place
 (decisions 0007, 0010).
 
@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_VERSION = "4"
+SCHEMA_VERSION = "5"
 SUBJECTS = ("math", "ela", "eld")
 
 # Records-file column -> database column.
@@ -417,6 +417,28 @@ def read_imported_edges(path, known_ids):
     return edges
 
 
+def read_components(derived_dir, known_ids):
+    """(component rows, link rows) from data/derived/. Both files or neither."""
+    if not derived_dir:
+        return [], []
+    comp_path = derived_dir / "learning_commons_components.csv"
+    link_path = derived_dir / "learning_commons_component_links.csv"
+    if not comp_path.exists() or not link_path.exists():
+        return [], []
+    with open(comp_path, encoding="utf-8", newline="") as f:
+        comps = [(r["component_id"], r["subject"], r["text"], r["author"], r["source"])
+                 for r in csv.DictReader(f)]
+    links = []
+    with open(link_path, encoding="utf-8", newline="") as f:
+        for line, r in enumerate(csv.DictReader(f), start=2):
+            if int(r["record_id"]) not in known_ids:
+                raise LoadError(f"{link_path.name} line {line}: record {r['record_id']} is not "
+                                "in the database. Re-run scripts/join_learning_commons.py.")
+            links.append((int(r["record_id"]), r["letter"], r["component_id"], r["note"] or None,
+                          r["source"], int(r["reviewed"])))
+    return comps, links
+
+
 def read_decisions(review_dir):
     """The owner's decisions on links, from the sheets in data/curated/review/.
 
@@ -471,7 +493,7 @@ def apply_decisions(con, decisions):
 # ---------- building the database ----------
 
 def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edges_path=None,
-          parents_path=None, eld_ela_path=None, review_dir=None):
+          parents_path=None, eld_ela_path=None, review_dir=None, components_dir=None):
     """Read everything, then write the database. Returns a summary dict."""
     codes = read_codes(codes_path)
     corrections = read_corrections(corrections_path) if corrections_path else {}
@@ -499,6 +521,7 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
     imported = read_imported_edges(edges_path, known_ids) if edges_path else []
     eld_ela = read_eld_ela(eld_ela_path, known_ids) if eld_ela_path else []
     decisions, pending = read_decisions(review_dir)
+    components, component_links = read_components(components_dir, known_ids)
 
     # Build into a temporary file and swap it in at the end, so a failure
     # part-way never leaves a half-written standards.db behind.
@@ -546,6 +569,9 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
         summary["eld_ela_links"] = len(eld_ela)
         edges = structural_edges(con) + imported
         con.executemany("INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?)", edges)
+        con.executemany("INSERT INTO learning_components VALUES (?, ?, ?, ?, ?)", components)
+        con.executemany("INSERT INTO component_links VALUES (?, ?, ?, ?, ?, ?)", component_links)
+        summary["components"] = (len(components), len(component_links))
         summary["decisions"] = apply_decisions(con, decisions)
         summary["decisions"]["pending"] = pending
         summary["edges"] = con.execute(
@@ -570,7 +596,8 @@ def main():
                         ROOT / "data" / "derived" / "learning_commons_edges.csv",
                         ROOT / "data" / "derived" / "learning_commons_parents.csv",
                         ROOT / "data" / "derived" / "learning_commons_eld_ela.csv",
-                        ROOT / "data" / "curated" / "review")
+                        ROOT / "data" / "curated" / "review",
+                        ROOT / "data" / "derived")
     except LoadError as e:
         sys.exit(f"Load stopped, database not changed.\n  {e}")
 
@@ -589,6 +616,8 @@ def main():
           f"{summary['added_parents']}")
     print(f"math sub-item records with no parent row: {summary['sub_items_without_parent']}")
     print(f"ELA standards listed against ELD standards: {summary['eld_ela_links']}")
+    print(f"learning components: {summary['components'][0]}, attached in "
+          f"{summary['components'][1]} places")
     print("\nedges:")
     for kind, source, n in summary["edges"]:
         print(f"  {n:5}  {kind} ({source})")

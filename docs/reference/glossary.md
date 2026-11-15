@@ -14,6 +14,8 @@ application: target type. The standard asks the student to use concepts and proc
 
 build: the step that deletes and recreates `data/build/standards.db` from the files in `data/raw/` and `data/curated/`, run by `src/load.py`. The database is build output and is never edited by hand or committed. (0007, 0010)
 
+builds towards: an edge type, `builds_towards`, imported from Learning Commons (the Student Achievement Partners coherence map). The "from" standard supports success in the "to" standard. Learning Commons says it captures a direction without requiring strict prerequisite order. Math only.
+
 CA addition: a standard or sub-item California added to the Common Core, marked by "CA" at the end of its text. Kept as a flag. (0005)
 
 carea: content area code used only on `/cacs/all` (ELA 7, ELD 10, Math 2, Science 13, CTE 11 and 12). Not the same numbers as the c0/c1/c2 filter codes on subject pages. (0002)
@@ -94,9 +96,19 @@ identifier_norm: the identifier with every dash as a hyphen. Used for joins, pro
 
 instructional hierarchy: the four learning stages (acquisition, fluency, generalization, adaptation) from Haring and Eaton (1978). Used for the learning stage dimension. (0009)
 
+Learning Commons: the publisher of the Knowledge Graph (docs.learningcommons.org), a dataset of standards, prerequisite links, and learning components. Its files live in a folder beside the repos and are not committed. Its item codes (3.NF.A.2, ELD.4.I.C.12) are its own and are not CDE identifiers.
+
+learning component: a short statement of one teachable piece of a standard, e.g. "Recognize addition of fractions as joining parts referring to the same whole". Written by Achievement Network (math) and Learning Commons (ELA, grades K–2) and attached to standards in the Learning Commons data. Stored in `learning_components` and `component_links`. Not the same as a concept, which is the owner's own list. (0006)
+
 learning stage: where a student is with a particular concept, as a position in the instructional hierarchy. Belongs to the student and concept together, not to a standard. The teacher gives it at query time; the database does not store it. (0009)
 
 loader: `src/load.py`, the script that runs the build. Not written yet. (0007)
+
+parent standard: a math standard that has lettered parts, e.g. 4.NF.3 with 4.NF.3.a–d. CDE has records for the parts and none for the parent, so the 63 parents are rows added from Learning Commons, with `origin='learning_commons'`, a negative `record_id`, and no CDE link. Each part points at its parent through `parent_record_id`.
+
+pathway: one of the two high school math course sequences: Algebra I, Geometry, Algebra II; or Math I, II, III. Imported math links join course copies within a pathway and never across.
+
+placeholder: a CDE record whose whole text is a note such as "(Begins in grade 2)" or "(Not applicable to literature)". The identifier is listed but there is no standard at that grade. `is_placeholder=1`; progressions skip them. 24 ELA records.
 
 population: optional scope fields describing students: tier or setting, grade band or age, EL status, ELD proficiency level, dual identification. Given at query time and not stored for students. (0009)
 
@@ -111,6 +123,8 @@ raw data: files in `data/raw/`, committed with a date in the name: scraped recor
 record: one entry on the CDE site, with its own page at `/cacs/id/web/<record ID>`. Usually one standard or sub-item. The same standard can be several records: one per ELD proficiency level, one per high school math course. Each row of a records file is one record. (0011)
 
 records file: `data/raw/<subject>_records_<date>.csv`, written by `scripts/scrape_cacs_records.py`. One row per record, with record_id, url, identifier, one column per field label, one `text_<Section>` column per text section, and page. UTF-8. The source the loader reads standards from. (0011)
+
+review sheet: a CSV in `data/curated/review/` listing the links or pairings that most need the owner's judgment. The owner writes `keep` or `reject` in `decision` and sets `reviewed` to 1; the loader applies it on the next build. `scripts/make_review_sheets.py` adds rows and never changes one.
 
 reviewed: column on curated and guidance rows. 0 = machine-generated or not yet checked. 1 = confirmed by the owner. Only the owner sets 1. (0006, 0007)
 

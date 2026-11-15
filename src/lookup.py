@@ -7,6 +7,7 @@ lookup.py - show what a standard builds on.
     python src/lookup.py 4.NF.3.a --depth 2
     python src/lookup.py A-CED.1           # several records: lists them
     python src/lookup.py --record 558      # one record, by CDE record ID
+    python src/lookup.py 4.NF.3.a --components   # also list its learning components
 
 Reads data/build/standards.db (run `python src/load.py` first) and follows the
 edges backwards from the standard you name: to the same strand in the grade
@@ -162,7 +163,28 @@ def print_bridge(con, row):
             print(wrapped(", ".join(names), "    "))
 
 
-def show(con, row, letter, depth, sub_items):
+def print_components(con, row, letter):
+    """Learning components: the teachable pieces Learning Commons lists for this
+    standard. With a sub-item letter, only that sub-item's."""
+    rows = con.execute(
+        "SELECT l.letter, c.text, c.author FROM component_links l "
+        "JOIN learning_components c USING (component_id) "
+        "WHERE l.record_id = ? AND (? IS NULL OR l.letter = ?) ORDER BY l.letter, c.text",
+        (row["record_id"], letter, letter)).fetchall()
+    if not rows:
+        print("\n  No learning components are listed for this standard.")
+        return
+    authors = ", ".join(sorted({r["author"] for r in rows}))
+    print(f"\n  Learning components ({len(rows)}; written by {authors}; not reviewed):")
+    current = None
+    for r in rows:
+        if r["letter"] != current and r["letter"]:
+            print(f"    for sub-item {r['letter']}:")
+        current = r["letter"]
+        print(wrapped(r["text"], "        ", first="      - "))
+
+
+def show(con, row, letter, depth, sub_items, components=False):
     get = lambda rid: con.execute("SELECT * FROM standards WHERE record_id = ?", (rid,)).fetchone()
     print(heading(row))
     if row["url"]:
@@ -176,6 +198,8 @@ def show(con, row, letter, depth, sub_items):
         print(wrapped(stem_of(con, parent), "    "))
 
     print_bridge(con, row)
+    if components:
+        print_components(con, row, letter)
 
     found, more = walk_back(con, row["record_id"], depth)
     if not found:
@@ -209,6 +233,8 @@ def main():
     ap.add_argument("--depth", type=int, default=3, help="how many links back to follow (default 3)")
     ap.add_argument("--no-sub-items", action="store_true",
                     help="leave the lettered sub-items out of the earlier standards")
+    ap.add_argument("--components", action="store_true",
+                    help="also list the learning components of the standard")
     ap.add_argument("--db", type=Path, default=ROOT / "data" / "build" / "standards.db")
     args = ap.parse_args()
     if not args.db.exists():
@@ -231,7 +257,7 @@ def main():
             print(f"  --record {r['record_id']:<6} {label(r)}   {grade_text(r)}")
             print(wrapped(r["text_standard"][:150], "      "))
         return
-    show(con, rows[0], letter, args.depth, not args.no_sub_items)
+    show(con, rows[0], letter, args.depth, not args.no_sub_items, args.components)
 
 
 if __name__ == "__main__":
