@@ -89,7 +89,8 @@ Done:
 - `python src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, 63 parent standards that have no CDE record (added from Learning Commons, with negative `record_id` and `origin='learning_commons'`), and 2,851 edges (1,187 `next_grade` and 514 `next_level` structural; 1,150 `builds_towards` from Learning Commons). No edge is reviewed.
 - `python scripts/join_learning_commons.py` pairs CDE records with Learning Commons California items: math 734 of 734, ELA 544 of 568, ELD 771 of 771, and every ELA sub-item. Output is in `data/derived/`.
 - `python src/lookup.py <identifier>` prints what a standard builds on, with the source of each link.
-- 62 tests pass (`python -m unittest discover tests`).
+- `lookup.py` also shows, for an ELD record, the ELA standards listed against its ELD standard, and for an ELA record, the ELD standards that list it.
+- 69 tests pass (`python -m unittest discover tests`).
 - The cross-check of CSV rows against scraped records (0011) was re-run on 2026-11-14 with the same counts.
 
 Facts found on 2026-11-14, not yet in a decision record:
@@ -98,7 +99,7 @@ Facts found on 2026-11-14, not yet in a decision record:
 - 24 ELA records are placeholders: their whole text is a note such as "(Begins in grade 2)" or "(Not applicable to literature)". `is_placeholder=1`; progressions skip them.
 - CDE lists some math standards only as their parts: 4.NF.3.a, b, c, d but no 4.NF.3. All 158 math sub-item records lacked a parent record: 30 parents in K–8 and 33 across the high school courses. Learning Commons has every one. `join_learning_commons.py` writes them to `data/derived/learning_commons_parents.csv` and the loader adds them as rows, each sub-item record pointing at its parent through `parent_record_id`. (An earlier note here said 30 of 32 K–8 parents were missing; the count of 32 wrongly included 2.NBT.7.1 and 5.OA.2.1, which are California additions, not sub-items.)
 - A link Learning Commons publishes to or from such a parent is one edge, on the parent row. Until 2026-11-14 it was copied onto every sub-item record, which turned 138 published links into 624 pairs nobody published. Those pairs are now in `learning_commons_spread_candidates.csv` and are not loaded. `lookup.py` shows a sub-item's parent and follows the parent's links.
-- One added parent, 4.NF.3, has LaTeX in its text (`$\frac{a}{b}$`), as Learning Commons writes it.
+- One added parent, 4.NF.3, has LaTeX in its Learning Commons text (`$\frac{a}{b}$`). `plain_math()` in the join script writes it as a/b, as CDE does.
 - ELD lettering changes between grades (PI.6 in grade 3 is PI.6a and PI.6b in grade 4). Those `next_grade` edges link every record of the number and carry a note; 48 edges.
 - The ELA asterisk footnote is in `text_Footnote` on 13 records. In math the asterisk appears only in high school (216 records), where it marks modeling standards, so `has_asterisk` means different things by subject.
 - Two sub-item typos in ELA text: "c . Decode" in RF.2.3 and "d.Review" in SL.4.1. The loader reads them as items c and d.
@@ -112,10 +113,14 @@ Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-1
 - 757 `buildsTowards` links (Student Achievement Partners coherence map, CC0) join Common Core math standards. 727 are imported as 1,150 edges: 453 between K–8 rows, one per published link, and 697 with a high school row at one or both ends (more than one per published link, because a standard is one row per course). 30 are not imported and are listed in `learning_commons_edges_unresolved.csv`: for 28 the California item has no CDE record (F-TF.3, N-CN.4, G-GMD.2 and others; why CDE lacks them is not checked), and for 2 no California item is rated the same as the Common Core one.
 - High school pairing rule (owner's decision, 2026-11-14): same pathway. Course copies are joined within Algebra I / Geometry / Algebra II and within Math I / II / III, never across. Each later standard is linked from the nearest copy of the earlier standard at or before its own course; a K–8 standard links to every course copy. Treating the course "Statistics and Probability" as following either pathway is an assumption made in the script, not something the owner decided.
 - It has no prerequisite links for ELA or ELD. Learning components cover 931 California math standards, and Common Core ELA for K–2 only.
-- Each ELD item has a `notes` field listing ELA identifiers ("W.4.4–5; SL.4.4, 6; L.4.1, 3, 5–6"). This looks like the correspondence column of the published CA ELD Standards. Seen on five items; not parsed or checked.
+- Each of its 209 California ELD standards has a `notes` field listing ELA standards ("W.4.4–5; SL.4.4, 6; L.4.1, 3, 5–6"); the items give the California State Board of Education as author. The join script splits the notes into 2,084 ELD-standard-to-ELA-record pairs, written to `learning_commons_eld_ela.csv` and loaded into the table `eld_ela_links`, all `reviewed=0`. Three notes read "Not applicable at kindergarten" or "at grade 1" and yield nothing. One piece had a stray space ("WHST. 9-10.4-5") and is read anyway. Every other piece matched exactly one ELA record. No RF standard appears in any note.
+- A note belongs to the ELD standard as a whole (part, number, grade), covering every proficiency level and letter, so `eld_ela_links` is keyed that way and is not in `edges`. Between 3 and 43 ELA standards are listed per ELD standard.
+- The notes write the grades 6–8 literacy strands by single grade ("RH.6.1–10"), where CDE has one record for grades 6–8 (RH.6–8.1). They are matched by the grade falling inside the record's range.
+- A range in a note can cross a placeholder: "RL.9–10.1, 7–9" includes RL.9-10.8, "(Not applicable to literature)". One such pair exists; `lookup.py` leaves placeholders out.
+- The notes have not been compared with the published CA ELD Standards document, which is the source they appear to copy.
 - Its 284 `relatesTo` links (non-directional) are not imported.
 
-Next: examine the ELD `notes` field as a source of ELD-to-ELA bridge edges. Then learning components as concept tags.
+Next: review sheets in `data/curated/` for the ELA, ELD, and math links and the ELD-to-ELA pairs, then tell the owner the review stage has been reached. Then learning components as concept tags.
 
 Open questions:
 - Whether the course "Statistics and Probability" should be linked from both pathways, as the join script now does.

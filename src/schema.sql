@@ -159,3 +159,21 @@ CREATE TABLE edges (
 ) STRICT;
 
 CREATE INDEX idx_edges_to ON edges (to_record_id);
+
+-- ELA standards listed against an ELD standard, from the notes on Learning
+-- Commons' California ELD items. A row is about the ELD standard as a whole:
+-- part, number and grade, covering every proficiency level and letter. It is
+-- kept apart from edges because it does not name one ELD record.
+CREATE TABLE eld_ela_links (
+    eld_part        TEXT NOT NULL,       -- PI or PII, as in standards.id_strand
+    eld_number      TEXT NOT NULL,       -- as in standards.id_number
+    eld_grade_min   INTEGER NOT NULL,
+    eld_grade_max   INTEGER NOT NULL,
+    ela_record_id   INTEGER NOT NULL REFERENCES standards (record_id),
+    as_written      TEXT NOT NULL,       -- the piece of the note this came from
+    source          TEXT NOT NULL,
+    reviewed        INTEGER NOT NULL CHECK (reviewed IN (0, 1)),
+    PRIMARY KEY (eld_part, eld_number, eld_grade_min, ela_record_id)
+) STRICT;
+
+CREATE INDEX idx_eld_ela_links_ela ON eld_ela_links (ela_record_id);

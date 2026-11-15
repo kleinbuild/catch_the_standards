@@ -6,8 +6,9 @@ load.py - rebuild data/build/standards.db from the scraped records files.
 
 Reads the newest data/raw/<subject>_records_<date>.csv for math, ela and eld,
 docs/reference/codes.csv, data/curated/identifier_corrections.csv and, if they
-exist, data/derived/learning_commons_parents.csv and learning_commons_edges.csv,
-and writes data/build/standards.db. The old database is replaced, never updated in place
+exist, three files in data/derived/ (learning_commons_parents.csv,
+learning_commons_edges.csv, learning_commons_eld_ela.csv), and writes
+data/build/standards.db. The old database is replaced, never updated in place
 (decisions 0007, 0010).
 
 Every standard is keyed by its CDE record ID (0011). Text and identifiers are
@@ -30,7 +31,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "4"
 SUBJECTS = ("math", "ela", "eld")
 
 # Records-file column -> database column.
@@ -384,6 +385,22 @@ def insert_parent(con, p, file_name):
          ca_marker, has_asterisk, 0, file_name, "learning_commons"))
 
 
+def read_eld_ela(path, known_ids):
+    """Rows of data/derived/learning_commons_eld_ela.csv. Missing file: none."""
+    if not path.exists():
+        return []
+    rows = []
+    with open(path, encoding="utf-8", newline="") as f:
+        for line, r in enumerate(csv.DictReader(f), start=2):
+            if int(r["ela_record_id"]) not in known_ids:
+                raise LoadError(f"{path.name} line {line}: record {r['ela_record_id']} is not in "
+                                "the records files. Re-run scripts/join_learning_commons.py.")
+            rows.append((r["eld_part"], r["eld_number"], int(r["eld_grade_min"]),
+                         int(r["eld_grade_max"]), int(r["ela_record_id"]), r["as_written"],
+                         r["source"], int(r["reviewed"])))
+    return rows
+
+
 def read_imported_edges(path, known_ids):
     """Rows of data/derived/learning_commons_edges.csv, written by
     scripts/join_learning_commons.py. Missing file: no imported edges."""
@@ -403,7 +420,7 @@ def read_imported_edges(path, known_ids):
 # ---------- building the database ----------
 
 def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edges_path=None,
-          parents_path=None):
+          parents_path=None, eld_ela_path=None):
     """Read everything, then write the database. Returns a summary dict."""
     codes = read_codes(codes_path)
     corrections = read_corrections(corrections_path) if corrections_path else {}
@@ -429,6 +446,7 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
     parents = read_parents(parents_path) if parents_path else []
     known_ids = set(seen) | {int(p["row_id"]) for p in parents}
     imported = read_imported_edges(edges_path, known_ids) if edges_path else []
+    eld_ela = read_eld_ela(eld_ela_path, known_ids) if eld_ela_path else []
 
     # Build into a temporary file and swap it in at the end, so a failure
     # part-way never leaves a half-written standards.db behind.
@@ -471,6 +489,8 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
         con.executemany("INSERT INTO identifier_corrections VALUES (?, ?, ?, ?, ?, ?)",
                         [(rid, r["identifier"], r["corrected_identifier"], r["evidence"],
                           r["source"], int(r["reviewed"])) for rid, r in sorted(corrections.items())])
+        con.executemany("INSERT INTO eld_ela_links VALUES (?, ?, ?, ?, ?, ?, ?, ?)", eld_ela)
+        summary["eld_ela_links"] = len(eld_ela)
         edges = structural_edges(con) + imported
         con.executemany("INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?)", edges)
         summary["edges"] = con.execute(
@@ -493,7 +513,8 @@ def main():
         summary = build(args.raw, args.codes, ROOT / "src" / "schema.sql", args.db,
                         ROOT / "data" / "curated" / "identifier_corrections.csv",
                         ROOT / "data" / "derived" / "learning_commons_edges.csv",
-                        ROOT / "data" / "derived" / "learning_commons_parents.csv")
+                        ROOT / "data" / "derived" / "learning_commons_parents.csv",
+                        ROOT / "data" / "derived" / "learning_commons_eld_ela.csv")
     except LoadError as e:
         sys.exit(f"Load stopped, database not changed.\n  {e}")
 
@@ -511,6 +532,7 @@ def main():
     print(f"\nparent standards added from Learning Commons (CDE has no record): "
           f"{summary['added_parents']}")
     print(f"math sub-item records with no parent row: {summary['sub_items_without_parent']}")
+    print(f"ELA standards listed against ELD standards: {summary['eld_ela_links']}")
     print("\nedges:")
     for kind, source, n in summary["edges"]:
         print(f"  {n:5}  {kind} ({source})")

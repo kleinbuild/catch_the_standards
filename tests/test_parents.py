@@ -33,7 +33,8 @@ class ParentsAndLinks(unittest.TestCase):
                    ROOT / "src" / "schema.sql", db,
                    ROOT / "data" / "curated" / "identifier_corrections.csv",
                    DERIVED / "learning_commons_edges.csv",
-                   DERIVED / "learning_commons_parents.csv")
+                   DERIVED / "learning_commons_parents.csv",
+                   DERIVED / "learning_commons_eld_ela.csv")
         cls.con = sqlite3.connect(db)
         cls.con.row_factory = sqlite3.Row
         with open(DERIVED / "learning_commons_edges.csv", encoding="utf-8", newline="") as f:
@@ -101,6 +102,26 @@ class ParentsAndLinks(unittest.TestCase):
         part = self.q("SELECT record_id FROM standards WHERE parent_record_id = ? LIMIT 1", parent)[0][0]
         found, _ = lookup.walk_back(self.con, part, 1)
         self.assertIn((earlier, parent), [(rid, via) for _, rid, via, *_ in found])
+
+    def test_added_parent_text_has_no_typesetting_marks(self):
+        self.assertEqual(self.q("SELECT text_standard FROM standards WHERE identifier = '4.NF.3' "
+                                "AND origin = 'learning_commons'"),
+                         [("Understand a fraction a/b with a > 1 as a sum of fractions 1/b.",)])
+        self.assertEqual(self.q("SELECT COUNT(*) FROM standards WHERE origin <> 'cde' AND "
+                                "(text_standard LIKE '%$%' OR text_standard LIKE '%\\%')"), [(0,)])
+
+    def test_eld_ela_links(self):
+        # The note on ELD Part I standard 1, kindergarten, is "SL.K.1, 6; L.K.1, 6".
+        listed = self.q("SELECT s.identifier FROM eld_ela_links l JOIN standards s "
+                        "ON s.record_id = l.ela_record_id WHERE l.eld_part = 'PI' "
+                        "AND l.eld_number = '1' AND l.eld_grade_min = 0 ORDER BY 1")
+        self.assertEqual(listed, [("L.K.1",), ("L.K.6",), ("SL.K.1",), ("SL.K.6",)])
+        # Every link points at an ELA record whose grades cover the ELD standard's.
+        self.assertEqual(self.q("SELECT COUNT(*) FROM eld_ela_links l JOIN standards s "
+                                "ON s.record_id = l.ela_record_id WHERE s.subject <> 'ela' "
+                                "OR s.grade_min > l.eld_grade_min OR s.grade_max < l.eld_grade_max"),
+                         [(0,)])
+        self.assertEqual(self.q("SELECT COUNT(*) FROM eld_ela_links WHERE reviewed <> 0"), [(0,)])
 
     def test_no_edge_is_marked_reviewed(self):
         self.assertEqual(self.q("SELECT COUNT(*) FROM edges WHERE reviewed <> 0"), [(0,)])

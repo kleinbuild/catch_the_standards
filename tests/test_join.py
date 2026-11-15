@@ -77,6 +77,38 @@ class PathwayPairs(unittest.TestCase):
                          {(1, 3), (2, 3)})
 
 
+class EldNotes(unittest.TestCase):
+
+    def test_ranges_and_lists(self):
+        found, unread = join.parse_note("W.4.4\u20135; SL.4.4, 6; L.4.1, 3, 5\u20136")
+        self.assertEqual([f[:3] for f in found],
+                         [("W", "4", "4"), ("W", "4", "5"), ("SL", "4", "4"), ("SL", "4", "6"),
+                          ("L", "4", "1"), ("L", "4", "3"), ("L", "4", "5"), ("L", "4", "6")])
+        self.assertEqual(unread, [])
+
+    def test_grade_bands(self):
+        found, _ = join.parse_note("RL.9\u201310.1, 7\u20139")
+        self.assertEqual([f[:3] for f in found],
+                         [("RL", "9-10", "1"), ("RL", "9-10", "7"), ("RL", "9-10", "8"),
+                          ("RL", "9-10", "9")])
+
+    def test_text_that_is_not_a_list_is_reported(self):
+        self.assertEqual(join.parse_note("Not applicable at grade 1"),
+                         ([], ["Not applicable at grade 1"]))
+
+
+class PlainMath(unittest.TestCase):
+
+    def test_fractions(self):
+        self.assertEqual(join.plain_math("a fraction $\\frac{a}{b}$ with a > 1 as a sum of "
+                                         "fractions $\\frac{1}{b}$."),
+                         "a fraction a/b with a > 1 as a sum of fractions 1/b.")
+
+    def test_ordinary_text_is_unchanged(self):
+        self.assertEqual(join.plain_math("Relate area to multiplication."),
+                         "Relate area to multiplication.")
+
+
 class TextCheck(unittest.TestCase):
 
     def test_same_despite_dashes_and_quotes(self):

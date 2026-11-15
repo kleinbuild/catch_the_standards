@@ -52,6 +52,13 @@ nearest copy of the earlier standard at or before its own course. A K-8
 standard, having one record, links to every course copy. The course
 "Statistics and Probability" is treated as following either pathway.
 
+Last, it reads the ELA standards listed against each ELD standard. Every
+California ELD item in Learning Commons has a note such as
+"W.4.4–5; SL.4.4, 6; L.4.1, 3, 5–6". Each note is split into single ELA
+standards and each is matched to its CDE record. The note belongs to the ELD
+standard as a whole (ELD Part I, grade 4, standard 12), not to one proficiency
+level or letter, and it is written out that way.
+
 Writes to data/derived/:
   learning_commons_map.csv               one row per pairing (or per unmatched record)
   learning_commons_unmapped.csv          California items no CDE record pairs with
@@ -59,6 +66,8 @@ Writes to data/derived/:
   learning_commons_edges.csv             builds-towards links between rows; the loader reads this
   learning_commons_spread_candidates.csv sub-item pairs a link to a parent could also mean; not loaded
   learning_commons_edges_unresolved.csv  links not written, and why
+  learning_commons_eld_ela.csv           ELA standards listed against each ELD standard; the loader reads this
+  learning_commons_eld_ela_unresolved.csv  pieces of those notes that matched no ELA record
   learning_commons_source.json           which Learning Commons files were read
 """
 import argparse
@@ -75,7 +84,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
-from load import split_sub_items, normalize_identifier  # noqa: E402
+from load import split_sub_items, normalize_identifier, parse_grade  # noqa: E402
 
 SUBJECTS = {"Mathematics": "math", "English Language Arts": "ela",
             "English Language Development": "eld"}
@@ -188,6 +197,7 @@ def read_california_items(graph_dir):
                     "type": p.get("statementType") or "",
                     "grades": json.loads(p.get("gradeLevel") or "[]"),
                     "text": p.get("description") or "",
+                    "notes": (p.get("notes") or "").strip(),
                 }
     parent, builds, same_as = {}, [], defaultdict(list)
     with open(rels, encoding="utf-8") as f:
@@ -247,6 +257,78 @@ def pathway_pairs(from_records, to_records):
     return pairs
 
 
+def plain_math(text):
+    """Learning Commons writes some fractions as LaTeX, a typesetting notation:
+    $\\frac{a}{b}$. CDE writes a/b. This turns the first into the second."""
+    return re.sub(r"\\frac\{([^{}]*)\}\{([^{}]*)\}", r"\1/\2", text).replace("$", "")
+
+
+# \s? allows the one note written with a stray space: "WHST. 9-10.4-5".
+NOTE_SEGMENT = re.compile(r"^([A-Z]+)\.\s?(K|\d+(?:-\d+)?)\.(.+)$")
+LC_ELD_CODE = re.compile(r"^ELD\.(K|\d+(?:-\d+)?)\.(I|II)\.[A-Z]\.(\d+)$")
+
+
+def parse_note(note):
+    """'W.4.4-5; SL.4.4, 6' -> [('W','4','4',seg), ('W','4','5',seg), ('SL','4','4',seg), ...]
+    plus a list of segments that could not be read."""
+    found, unread = [], []
+    for segment in normalize_identifier(note).split(";"):
+        segment = segment.strip()
+        m = NOTE_SEGMENT.match(segment)
+        if not segment:
+            continue
+        if not m:
+            unread.append(segment)
+            continue
+        numbers = []
+        for piece in m[3].split(","):
+            r = re.fullmatch(r"(\d+)(?:-(\d+))?", piece.strip())
+            if not r or int(r[2] or r[1]) < int(r[1]):
+                numbers = None
+                break
+            numbers += range(int(r[1]), int(r[2] or r[1]) + 1)
+        if numbers is None:
+            unread.append(segment)
+        else:
+            found += [(m[1], m[2], str(n), segment) for n in numbers]
+    return found, unread
+
+
+def eld_ela_rows(items, records):
+    """Returns (rows for learning_commons_eld_ela.csv, unresolved rows)."""
+    ela = defaultdict(list)                 # (strand, number) -> ELA records
+    for r in records:
+        if r["subject"] == "ela" and r["id_parsed"]:
+            ela[(r["id_strand"], r["id_number"])].append(r)
+    rows, unresolved = [], []
+    for item in sorted(items.values(), key=lambda i: i["code"]):
+        m = LC_ELD_CODE.match(item["code"]) if item["subject"] == "eld" else None
+        if not m or item["type"] != "Standard":
+            continue
+        grade_min, grade_max = parse_grade(m[1])
+        found, unread = parse_note(item["notes"])
+        for segment in unread:
+            unresolved.append([item["code"], segment, "cannot read this piece of the note"])
+        seen = set()
+        for strand, grade, number, segment in found:
+            lo, hi = parse_grade(grade)
+            # RH, RST and WHST are written "RH.6.1" in the notes but are one
+            # record for grades 6-8, so match on the grade falling inside the record's range.
+            hits = [r for r in ela[(strand, number)] if r["grade_min"] <= lo and hi <= r["grade_max"]]
+            if len(hits) != 1:
+                unresolved.append([item["code"], segment,
+                                   f"{strand}.{grade}.{number}: {len(hits)} ELA records match"])
+                continue
+            r = hits[0]
+            if r["record_id"] in seen:
+                continue
+            seen.add(r["record_id"])
+            rows.append(["P" + m[2], m[3], m[1], grade_min, grade_max, r["record_id"],
+                         r["identifier"], r["is_placeholder"], segment, item["code"],
+                         item["case_uuid"], item["lc_identifier"], "learning_commons_notes", 0])
+    return rows, unresolved
+
+
 def math_records_of(rows):
     """Learning Commons identifier -> CDE record IDs, and record ID -> (identifier, course)."""
     records_of, info = defaultdict(set), {}
@@ -288,7 +370,7 @@ def build_parents(rows, items, graph, records):
                 sys.exit(f"Two parent standards came out with the same row_id {row_id}.")
             taken.add(row_id)
             parents.append([row_id, "math", identifier, course, rec[kids[0]]["grade_label"],
-                            item["text"], " ".join(map(str, kids)), item["case_uuid"],
+                            plain_math(item["text"]), " ".join(map(str, kids)), item["case_uuid"],
                             item["lc_identifier"], item["code"], "learning_commons", 0])
             parent_ids[item["lc_identifier"]][row_id] = course
     return sorted(parents, key=lambda r: (r[3], r[2])), parent_ids
@@ -518,6 +600,7 @@ def main():
     rows, used = pair(records, sub_items, items)
     parents, parent_ids = build_parents(rows, items, graph, records)
     edges, unresolved, candidates = import_edges(rows, items, graph, parents, parent_ids)
+    eld_ela, eld_ela_unresolved = eld_ela_rows(items, records)
 
     args.out.mkdir(parents=True, exist_ok=True)
     with open(args.out / "learning_commons_map.csv", "w", newline="", encoding="utf-8") as f:
@@ -536,6 +619,17 @@ def main():
         for i in unmapped:
             w.writerow([i["subject"], i["code"], i["type"], i["course"], " ".join(i["grades"]),
                         i["parent_code"], i["case_uuid"], i["lc_identifier"]])
+    with open(args.out / "learning_commons_eld_ela.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["eld_part", "eld_number", "eld_grade_label", "eld_grade_min", "eld_grade_max",
+                    "ela_record_id", "ela_identifier", "ela_is_placeholder", "as_written",
+                    "lc_statement_code", "lc_case_uuid", "lc_identifier", "source", "reviewed"])
+        w.writerows(eld_ela)
+    with open(args.out / "learning_commons_eld_ela_unresolved.csv", "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["lc_statement_code", "as_written", "problem"])
+        w.writerows(eld_ela_unresolved)
     with open(args.out / "learning_commons_parents.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, lineterminator="\n")
         w.writerow(["row_id", "subject", "identifier", "discipline", "grade_label", "text",
@@ -597,6 +691,12 @@ def main():
     print(f"           ({len({c[0] for c in candidates})} of them touch a parent standard; the "
           f"{len(candidates)} sub-item pairs they could also mean are listed, not loaded)")
     for why, n in Counter(u[2] or u[3] for u in unresolved).most_common():
+        print(f"    {n:5}  not written: {why}")
+    eld_items = {r[9] for r in eld_ela}
+    print(f"\nELA standards listed against ELD standards: {len(eld_ela)} pairs, "
+          f"from the notes of {len(eld_items)} ELD items")
+    print(f"    {sum(1 for r in eld_ela if r[7]):5}  point at an ELA placeholder record")
+    for why, n in Counter(u[2].split(":")[-1].strip() for u in eld_ela_unresolved).most_common():
         print(f"    {n:5}  not written: {why}")
     print(f"\nWrote {args.out}")
 

@@ -138,6 +138,30 @@ def print_standard(con, row, indent, letter=None, sub_items=True):
                           first=indent + mark))
 
 
+def print_bridge(con, row):
+    """For a student who is both an English learner and in special education:
+    the ELA standards listed against an ELD standard, or the reverse."""
+    if row["subject"] == "eld" and row["id_parsed"]:
+        names = [r["identifier"] for r in con.execute(
+            "SELECT s.identifier FROM eld_ela_links l JOIN standards s ON s.record_id = l.ela_record_id "
+            "WHERE l.eld_part = ? AND l.eld_number = ? AND l.eld_grade_min = ? "
+            "AND s.is_placeholder = 0 "     # a range like RL 7-9 can cross "(Not applicable)"
+            "ORDER BY s.id_strand, CAST(s.id_number AS INTEGER)",
+            (row["id_strand"], row["id_number"], row["grade_min"]))]
+        if names:
+            whole = f"ELD {row['id_strand']} standard {row['id_number']}, {grade_text(row)}"
+            print(f"\n  ELA standards listed against {whole} (all levels and letters):")
+            print(wrapped(", ".join(names), "    "))
+    elif row["subject"] == "ela":
+        names = [f"{r['eld_part']} {r['eld_number']}" for r in con.execute(
+            "SELECT eld_part, eld_number FROM eld_ela_links WHERE ela_record_id = ? "
+            "ORDER BY eld_part, CAST(eld_number AS INTEGER)", (row["record_id"],))]
+        if names:
+            print(f"\n  ELD standards at this grade that list this standard "
+                  f"(part and number; all levels):")
+            print(wrapped(", ".join(names), "    "))
+
+
 def show(con, row, letter, depth, sub_items):
     get = lambda rid: con.execute("SELECT * FROM standards WHERE record_id = ?", (rid,)).fetchone()
     print(heading(row))
@@ -150,6 +174,8 @@ def show(con, row, letter, depth, sub_items):
         parent = get(row["parent_record_id"])
         print(f"\n  Part of {heading(parent)}")
         print(wrapped(stem_of(con, parent), "    "))
+
+    print_bridge(con, row)
 
     found, more = walk_back(con, row["record_id"], depth)
     if not found:
