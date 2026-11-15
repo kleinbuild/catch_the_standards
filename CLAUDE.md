@@ -34,6 +34,7 @@ When asked to document what was learned, write it as working notes: claim, then 
 ```
 CLAUDE.md, README.md, requirements.txt, .gitignore
 docs/decisions/    one file per decision, numbered; read these before changing data handling
+docs/design/       ui-options.md (first thoughts on the interface and how teachers get the tool; not decided)
 docs/reference/    glossary.md (project terms); generated CACS_URL_REFERENCE.md, codes.csv, codes.json
 scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE record; the standards source, 0011)
                    match_csv_to_records.py (pairs dl=1 CSV rows with scraped records)
@@ -82,6 +83,29 @@ tests/             test_load.py, test_join.py, test_lookup.py; run with `python 
 - `/cacs/eld` holds ELD Part I (507 records) and Part II (264), and no Part III. (0005, 0011)
 
 
+## Pick up here (written 2026-11-14 for the next session)
+
+The first slice of the data work is finished and the owner wants to move to interface design and a prototype. Read `docs/design/ui-options.md` first: it holds Claude's first thoughts on delivery (a web page with the database inside it is recommended), on how to draw the prerequisite view, and six questions for the owner whose answers shape the design. The suggested first step is that the owner answers those questions and Claude builds one HTML file with real data for three standards in two layouts.
+
+To see the current tool on this machine:
+```bash
+python src/load.py                                # rebuild data/build/standards.db
+python src/lookup.py 4.NF.3.a --components        # math: prerequisites, parent standard, learning components
+python src/lookup.py L.5.1b                       # ELA: progression, sub-item b marked, ELD standards that list it
+python src/lookup.py ELD.PI.4.6a.Ex               # ELD: earlier grade, lower level, ELA standards listed against it
+python -m unittest discover tests                 # 83 tests
+```
+None of these needs the venv; they use only Python's standard library.
+
+Waiting on the owner:
+- Marking the review sheets in `data/curated/review/` (how: the README there), starting 2026-11-15. No row is marked yet. The seven rows of `data/curated/identifier_corrections.csv` are also `reviewed=0`.
+- Merging `build/loader` into `main`. No pull request has been opened. `main` is 12 commits behind.
+- On the Debian laptop: `git fetch origin && git switch main && git reset --hard origin/main`, not `git pull`. The laptop still has the commit that held `ccssmgraph.pdf`, and a pull would merge it back.
+- Asking GitHub Support to remove unreachable commit 20bc256 from `kleinbuild/catch_the_standards`, if the owner wants the PDF gone for good.
+- Whether `cacs_probe/` stays in the repo.
+
+To refresh from a new Learning Commons release: put the files in `learning_commons/open-knowledge-graph/` beside the repo, then run `python src/load.py`, `python scripts/join_learning_commons.py`, `python src/load.py` again, and `python scripts/make_review_sheets.py`. The first load gives the join script the records; the second picks up what the join wrote. The join script reads about 1 GB and takes under a minute.
+
 ## Current state (2026-11-14)
 
 Work is on branch `build/loader` here (pushed) and `dev/private-sources` in the private repo (local, nothing committed on it).
@@ -92,8 +116,8 @@ Done:
 - `python src/lookup.py <identifier>` prints what a standard builds on, with the source of each link.
 - `lookup.py` also shows, for an ELD record, the ELA standards listed against its ELD standard, and for an ELA record, the ELD standards that list it.
 - `python scripts/make_review_sheets.py` wrote six sheets to `data/curated/review/` (how to mark them: the README there). The loader applies decisions from the link sheets where a row has `reviewed=1`: `keep` marks the link reviewed, or adds it with source `owner` if it was a candidate; `reject` leaves it out. Decisions on `pairings.csv` and `eld_ela_notes.csv` are recorded and not yet acted on.
-- Learning components load when their two files are in `data/derived/`: 5,983 components attached in 7,382 places (1,848 math components on 744 records or parent rows; 4,135 ELA components on 200 K–2 records or sub-items). `python src/lookup.py 4.NF.3.a --components` lists them. Both files are in `.gitignore` for now (see open questions), so a fresh clone builds without components until `join_learning_commons.py` is run there.
-- 83 tests pass (`python -m unittest discover tests`); the 5 learning-component tests are skipped where the two files are absent.
+- Learning components load when their two files are in `data/derived/`: 5,983 components attached in 7,382 places (1,848 math components on 744 records or parent rows; 4,135 ELA components on 200 K–2 records or sub-items). `python src/lookup.py 4.NF.3.a --components` lists them. The owner approved committing both files (1.8 MB together) on 2026-11-14.
+- 83 tests pass (`python -m unittest discover tests`).
 - The cross-check of CSV rows against scraped records (0011) was re-run on 2026-11-14 with the same counts.
 
 Facts found on 2026-11-14, not yet in a decision record:
@@ -126,12 +150,11 @@ Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-1
 
 Review stage reached 2026-11-14: the sheets are with the owner and none is marked yet. What each sheet holds: `ela_links.csv` 44 next-grade links whose wording is under 30% alike; `eld_links.csv` 48 links where lettering changes and 9 whose wording is under 30% alike; `math_links.csv` 19 links that jump three or more grades and 45 involving the Statistics and Probability course; `math_link_candidates.csv` the 624 set-aside sub-item pairs; `pairings.csv` 58 records (49 math, 9 ELA) whose text differs from their Learning Commons item; `eld_ela_notes.csv` 206 ELD notes, 22 of them (one per part per grade) marked as the sample to compare with the published CA ELD Standards.
 
-Next: act on the owner's decisions as they come. Then how teachers will reach the tool (the macOS question below), since every build item of the first slice is now in.
+Next: interface design and a prototype (`docs/design/ui-options.md`), and acting on the owner's review decisions as they come.
 
 Open questions:
 - Whether the course "Statistics and Probability" should be linked from both pathways, as the join script now does.
 - No link from the course Statistics and Probability back to a pathway course exists in the data, so the "either pathway" assumption affects only the 45 links listed in `math_links.csv`.
-- Whether the two learning-component files (1.8 MB together, text written by Achievement Network and Learning Commons, CC BY 4.0) are committed to this public repo. Until the owner says, they are in `.gitignore`.
 - Whether learning components should seed the owner's concepts list (0006), or stay a separate reference.
 - Links not on any sheet (most of them) stay `reviewed=0`. Whether the owner wants a way to mark whole groups as accepted has not been asked.
 - The 49 math records whose text differs from the paired Learning Commons item have not been read one by one.
