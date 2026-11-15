@@ -5,9 +5,9 @@ load.py - rebuild data/build/standards.db from the scraped records files.
     python src/load.py
 
 Reads the newest data/raw/<subject>_records_<date>.csv for math, ela and eld,
-docs/reference/codes.csv, data/curated/identifier_corrections.csv and, if it
-exists, data/derived/learning_commons_edges.csv, and writes
-data/build/standards.db. The old database is replaced, never updated in place
+docs/reference/codes.csv, data/curated/identifier_corrections.csv and, if they
+exist, data/derived/learning_commons_parents.csv and learning_commons_edges.csv,
+and writes data/build/standards.db. The old database is replaced, never updated in place
 (decisions 0007, 0010).
 
 Every standard is keyed by its CDE record ID (0011). Text and identifiers are
@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 SUBJECTS = ("math", "ela", "eld")
 
 # Records-file column -> database column.
@@ -284,7 +284,7 @@ def read_records(path, subject, codes, corrections=None):
             int(parts["strand"] is not None), parts["strand"], parts["grade"], parts["number"],
             parts["letter"], parts["level"], parts["parent"],
             ca_marker, has_asterisk, int(is_placeholder(texts["text_standard"])),
-            path.name, int(row["page"]),
+            path.name, int(row["page"]), "cde", None,
         ))
         for letter, text in split_sub_items(texts["text_standard"])[1]:
             sub_items.append((int(record_id), letter, text, *flags(text)))
@@ -344,6 +344,46 @@ def structural_edges(con):
     return edges
 
 
+def read_parents(path):
+    """Rows of data/derived/learning_commons_parents.csv: parent standards that
+    CDE lists only as their parts. Missing file: none."""
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def insert_parent(con, p, file_name):
+    """Add one parent standard. Grade, domain and course are taken from its
+    sub-item records, which must agree with each other."""
+    kids = [int(k) for k in p["child_record_ids"].split()]
+    marks = ",".join("?" * len(kids))
+    facts = con.execute(
+        "SELECT grade_label, grade_min, grade_max, domain, discipline, conceptual_category, "
+        f"MIN(text_cluster), COUNT(*) FROM standards WHERE record_id IN ({marks}) "
+        "GROUP BY 1, 2, 3, 4, 5, 6", kids).fetchall()
+    if len(facts) != 1 or facts[0][7] != len(kids) or (facts[0][4] or "") != p["discipline"]:
+        raise LoadError(f"{file_name}: the sub-item records of {p['identifier']} "
+                        f"({p['child_record_ids']}) are missing or disagree on grade, domain "
+                        "or course. Re-run scripts/join_learning_commons.py.")
+    grade_label, grade_min, grade_max, domain, discipline, category, text_cluster, _ = facts[0]
+    identifier_norm = normalize_identifier(p["identifier"])
+    parts = parse_identifier("math", identifier_norm) or dict(
+        strand=None, grade=None, number=None, letter=None, level=None, parent=None)
+    ca_marker, has_asterisk = flags(p["text"])
+    con.execute(
+        "INSERT INTO standards (record_id, subject, identifier, identifier_norm, grade_label, "
+        "grade_min, grade_max, domain, discipline, conceptual_category, text_cluster, "
+        "text_standard, text_search, id_parsed, id_strand, id_grade, id_number, id_letter, "
+        "id_level, parent_identifier_norm, ca_marker, has_asterisk, is_placeholder, "
+        "source_file, origin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (int(p["row_id"]), "math", p["identifier"], identifier_norm, grade_label, grade_min,
+         grade_max, domain, discipline, category, text_cluster, p["text"],
+         search_form(p["text"]), int(parts["strand"] is not None), parts["strand"],
+         parts["grade"], parts["number"], parts["letter"], parts["level"], parts["parent"],
+         ca_marker, has_asterisk, 0, file_name, "learning_commons"))
+
+
 def read_imported_edges(path, known_ids):
     """Rows of data/derived/learning_commons_edges.csv, written by
     scripts/join_learning_commons.py. Missing file: no imported edges."""
@@ -362,7 +402,8 @@ def read_imported_edges(path, known_ids):
 
 # ---------- building the database ----------
 
-def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edges_path=None):
+def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edges_path=None,
+          parents_path=None):
     """Read everything, then write the database. Returns a summary dict."""
     codes = read_codes(codes_path)
     corrections = read_corrections(corrections_path) if corrections_path else {}
@@ -385,7 +426,9 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
     if unknown:
         raise LoadError(f"identifier_corrections.csv names records that are not in the "
                         f"records files: {sorted(unknown)}")
-    imported = read_imported_edges(edges_path, seen) if edges_path else []
+    parents = read_parents(parents_path) if parents_path else []
+    known_ids = set(seen) | {int(p["row_id"]) for p in parents}
+    imported = read_imported_edges(edges_path, known_ids) if edges_path else []
 
     # Build into a temporary file and swap it in at the end, so a failure
     # part-way never leaves a half-written standards.db behind.
@@ -409,8 +452,22 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
             con.execute("INSERT INTO source_files VALUES (?, ?, ?, ?)",
                         (subject, path.name, hashlib.sha256(path.read_bytes()).hexdigest(),
                          len(standards)))
-            con.executemany(f"INSERT INTO standards VALUES ({','.join('?' * 35)})", standards)
+            con.executemany(f"INSERT INTO standards VALUES ({','.join('?' * 37)})", standards)
             con.executemany("INSERT INTO sub_items VALUES (?, ?, ?, ?, ?)", sub_items)
+        for p in parents:
+            insert_parent(con, p, parents_path.name)
+        # Point each math sub-item record at its parent's row, in the same course.
+        con.execute(
+            "UPDATE standards SET parent_record_id = ("
+            "  SELECT p.record_id FROM standards p WHERE p.subject = 'math' "
+            "  AND p.identifier_norm = standards.parent_identifier_norm "
+            "  AND COALESCE(p.discipline, '') = COALESCE(standards.discipline, '') "
+            "  ORDER BY p.record_id DESC LIMIT 1) "
+            "WHERE parent_identifier_norm IS NOT NULL")
+        summary["added_parents"] = len(parents)
+        summary["sub_items_without_parent"] = con.execute(
+            "SELECT COUNT(*) FROM standards WHERE parent_identifier_norm IS NOT NULL "
+            "AND parent_record_id IS NULL").fetchone()[0]
         con.executemany("INSERT INTO identifier_corrections VALUES (?, ?, ?, ?, ?, ?)",
                         [(rid, r["identifier"], r["corrected_identifier"], r["evidence"],
                           r["source"], int(r["reviewed"])) for rid, r in sorted(corrections.items())])
@@ -435,7 +492,8 @@ def main():
     try:
         summary = build(args.raw, args.codes, ROOT / "src" / "schema.sql", args.db,
                         ROOT / "data" / "curated" / "identifier_corrections.csv",
-                        ROOT / "data" / "derived" / "learning_commons_edges.csv")
+                        ROOT / "data" / "derived" / "learning_commons_edges.csv",
+                        ROOT / "data" / "derived" / "learning_commons_parents.csv")
     except LoadError as e:
         sys.exit(f"Load stopped, database not changed.\n  {e}")
 
@@ -450,6 +508,9 @@ def main():
     print(f"grade in the identifier differs from the Grade field: {len(summary['grade_mismatch'])}")
     for record_id, identifier, grade in summary["grade_mismatch"]:
         print(f"  record {record_id}: {identifier} has Grade {grade}")
+    print(f"\nparent standards added from Learning Commons (CDE has no record): "
+          f"{summary['added_parents']}")
+    print(f"math sub-item records with no parent row: {summary['sub_items_without_parent']}")
     print("\nedges:")
     for kind, source, n in summary["edges"]:
         print(f"  {n:5}  {kind} ({source})")

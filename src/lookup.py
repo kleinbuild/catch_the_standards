@@ -63,23 +63,31 @@ def walk_back(con, record_id, max_depth):
     standards two links away, and so on. A standard reachable by two routes is
     listed once, at its shortest distance.
     """
-    found, seen, frontier = [], {record_id}, [record_id]
+    def with_parent(rid):
+        """A sub-item record such as 4.NF.3.a also builds on whatever its
+        parent standard 4.NF.3 builds on."""
+        parent = con.execute("SELECT parent_record_id FROM standards WHERE record_id = ?",
+                             (rid,)).fetchone()[0]
+        return [rid] if parent is None else [rid, parent]
+
+    found, seen, frontier = [], set(with_parent(record_id)), [record_id]
     for steps in range(1, max_depth + 1):
         next_frontier = []
         for current in frontier:
-            for row in con.execute(
-                    "SELECT from_record_id, type, source, note FROM edges "
-                    "WHERE to_record_id = ? ORDER BY type, from_record_id", (current,)):
-                if row["from_record_id"] not in seen:
-                    seen.add(row["from_record_id"])
-                    next_frontier.append(row["from_record_id"])
-                    found.append((steps, row["from_record_id"], current,
-                                  row["type"], row["source"], row["note"]))
+            for target in with_parent(current):
+                for row in con.execute(
+                        "SELECT from_record_id, type, source, note FROM edges "
+                        "WHERE to_record_id = ? ORDER BY type, from_record_id", (target,)):
+                    if row["from_record_id"] not in seen:
+                        seen.add(row["from_record_id"])
+                        next_frontier.append(row["from_record_id"])
+                        found.append((steps, row["from_record_id"], target,
+                                      row["type"], row["source"], row["note"]))
         frontier = next_frontier
         if not frontier:
             break
-    more = any(con.execute("SELECT 1 FROM edges WHERE to_record_id = ? LIMIT 1", (r,)).fetchone()
-               for r in frontier)
+    more = any(con.execute("SELECT 1 FROM edges WHERE to_record_id = ? LIMIT 1", (t,)).fetchone()
+               for r in frontier for t in with_parent(r))
     return found, more
 
 
@@ -109,8 +117,19 @@ def stem_of(con, row):
     return re.split(r"\n\s*a\s?\.", row["text_standard"], maxsplit=1)[0]
 
 
+def heading(row):
+    where = (f"record {row['record_id']}" if row["origin"] == "cde"
+             else "no CDE record; text from Learning Commons")
+    return f"{label(row)}   {grade_text(row)}   {where}"
+
+
 def print_standard(con, row, indent, letter=None, sub_items=True):
     print(wrapped(stem_of(con, row), indent))
+    parts = [r["identifier"] for r in con.execute(
+        "SELECT identifier FROM standards WHERE parent_record_id = ? ORDER BY identifier",
+        (row["record_id"],))]
+    if parts:
+        print(wrapped("CDE records for its parts: " + ", ".join(parts), indent))
     if sub_items:
         for sub in con.execute("SELECT letter, text FROM sub_items WHERE record_id = ? "
                                "ORDER BY letter", (row["record_id"],)):
@@ -121,11 +140,16 @@ def print_standard(con, row, indent, letter=None, sub_items=True):
 
 def show(con, row, letter, depth, sub_items):
     get = lambda rid: con.execute("SELECT * FROM standards WHERE record_id = ?", (rid,)).fetchone()
-    print(f"{label(row)}   {grade_text(row)}   record {row['record_id']}")
-    print(f"  {row['url']}")
+    print(heading(row))
+    if row["url"]:
+        print(f"  {row['url']}")
     if row["identifier_corrected"]:
         print(f"  CDE's identifier looks wrong; read here as {row['identifier_corrected']}")
     print_standard(con, row, "  ", letter)
+    if row["parent_record_id"] is not None:
+        parent = get(row["parent_record_id"])
+        print(f"\n  Part of {heading(parent)}")
+        print(wrapped(stem_of(con, parent), "    "))
 
     found, more = walk_back(con, row["record_id"], depth)
     if not found:
@@ -139,7 +163,7 @@ def show(con, row, letter, depth, sub_items):
         for _, rid, via, kind, source, note in level:
             r = get(rid)
             towards = "" if via == row["record_id"] else f" (towards {get(via)['identifier']})"
-            print(f"    {label(r)}   {grade_text(r)}   record {rid}")
+            print(f"    {heading(r)}")
             print(f"      {LINK_WORDS.get(kind, kind)}{towards}; source: "
                   f"{SOURCE_WORDS.get(source, source)}" + (f"; {note}" if note else ""))
             print_standard(con, r, "      ", sub_items=sub_items)

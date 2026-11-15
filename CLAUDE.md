@@ -86,17 +86,19 @@ tests/             test_load.py, test_join.py, test_lookup.py; run with `python 
 Work is on branch `build/loader` here (pushed) and `dev/private-sources` in the private repo (local, nothing committed on it).
 
 Done:
-- `python src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, and 3,255 edges (1,187 `next_grade` and 514 `next_level` structural; 1,554 `builds_towards` from Learning Commons). No edge is reviewed.
+- `python src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, 63 parent standards that have no CDE record (added from Learning Commons, with negative `record_id` and `origin='learning_commons'`), and 2,851 edges (1,187 `next_grade` and 514 `next_level` structural; 1,150 `builds_towards` from Learning Commons). No edge is reviewed.
 - `python scripts/join_learning_commons.py` pairs CDE records with Learning Commons California items: math 734 of 734, ELA 544 of 568, ELD 771 of 771, and every ELA sub-item. Output is in `data/derived/`.
 - `python src/lookup.py <identifier>` prints what a standard builds on, with the source of each link.
-- 52 tests pass (`python -m unittest discover tests`).
+- 62 tests pass (`python -m unittest discover tests`).
 - The cross-check of CSV rows against scraped records (0011) was re-run on 2026-11-14 with the same counts.
 
 Facts found on 2026-11-14, not yet in a decision record:
 - ELA sub-items are not separate records. No ELA identifier has a letter; 139 ELA records hold lettered lines inside `text_Standard`. The loader splits them into `sub_items`, keyed by record ID plus letter. Learning Commons has each as its own item (L.5.1.b).
 - Seven identifiers are wrong on the CDE site and are listed with evidence in `data/curated/identifier_corrections.csv`, all `reviewed=0`: RL.2..2, RL.2..3, ELD.PI.12a.Em/Ex/Br (grade 4), ELD.PI.7.78.Em (the owner judged it a typo for 7.8), and the second Calculus.16.0 (record 4763), whose text is Learning Commons' 17.0. The loader keeps the identifier as written and reads the parts from the correction.
 - 24 ELA records are placeholders: their whole text is a note such as "(Begins in grade 2)" or "(Not applicable to literature)". `is_placeholder=1`; progressions skip them.
-- 30 of the 32 K–8 math standards that have sub-item records have no record of their own (3.NF.2, 4.NF.3). Learning Commons has all 30. They are not yet rows in the database; imported links to such a parent are attached to its sub-item records, with a note.
+- CDE lists some math standards only as their parts: 4.NF.3.a, b, c, d but no 4.NF.3. All 158 math sub-item records lacked a parent record: 30 parents in K–8 and 33 across the high school courses. Learning Commons has every one. `join_learning_commons.py` writes them to `data/derived/learning_commons_parents.csv` and the loader adds them as rows, each sub-item record pointing at its parent through `parent_record_id`. (An earlier note here said 30 of 32 K–8 parents were missing; the count of 32 wrongly included 2.NBT.7.1 and 5.OA.2.1, which are California additions, not sub-items.)
+- A link Learning Commons publishes to or from such a parent is one edge, on the parent row. Until 2026-11-14 it was copied onto every sub-item record, which turned 138 published links into 624 pairs nobody published. Those pairs are now in `learning_commons_spread_candidates.csv` and are not loaded. `lookup.py` shows a sub-item's parent and follows the parent's links.
+- One added parent, 4.NF.3, has LaTeX in its text (`$\frac{a}{b}$`), as Learning Commons writes it.
 - ELD lettering changes between grades (PI.6 in grade 3 is PI.6a and PI.6b in grade 4). Those `next_grade` edges link every record of the number and carry a note; 48 edges.
 - The ELA asterisk footnote is in `text_Footnote` on 13 records. In math the asterisk appears only in high school (216 records), where it marks modeling standards, so `has_asterisk` means different things by subject.
 - Two sub-item typos in ELA text: "c . Decode" in RF.2.3 and "d.Review" in SL.4.1. The loader reads them as items c and d.
@@ -107,17 +109,18 @@ Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-1
 - Its item codes are its own, not CDE identifiers. Math codes carry the cluster letter and an HS prefix (3.NF.A.2, HSA-CED.A.1), and California's own additions are written with a dot (HSF.LE.A.4.1). `cde_form()` in the join script rewrites them. High school standards are one item per course, as on the CDE site, plus one copy under no course.
 - Its ELD codes have no letter and no proficiency level (ELD.4.I.C.12), so several CDE records share one item.
 - Math text agrees for 512 of 734 records and one text contains the other for 173; 49 differ and are marked in `learning_commons_map.csv`. CDE repeats the parent sentence before a sub-item, and one side or the other omits the worked examples.
-- 757 `buildsTowards` links (Student Achievement Partners coherence map, CC0) join Common Core math standards. 727 are imported as 1,554 record-to-record edges: 645 between K–8 records and 909 with a high school record at one or both ends. 30 are not imported and are listed in `learning_commons_edges_unresolved.csv`: for 28 the California item has no CDE record (F-TF.3, N-CN.4, G-GMD.2 and others; why CDE lacks them is not checked), and for 2 no California item is rated the same as the Common Core one.
+- 757 `buildsTowards` links (Student Achievement Partners coherence map, CC0) join Common Core math standards. 727 are imported as 1,150 edges: 453 between K–8 rows, one per published link, and 697 with a high school row at one or both ends (more than one per published link, because a standard is one row per course). 30 are not imported and are listed in `learning_commons_edges_unresolved.csv`: for 28 the California item has no CDE record (F-TF.3, N-CN.4, G-GMD.2 and others; why CDE lacks them is not checked), and for 2 no California item is rated the same as the Common Core one.
 - High school pairing rule (owner's decision, 2026-11-14): same pathway. Course copies are joined within Algebra I / Geometry / Algebra II and within Math I / II / III, never across. Each later standard is linked from the nearest copy of the earlier standard at or before its own course; a K–8 standard links to every course copy. Treating the course "Statistics and Probability" as following either pathway is an assumption made in the script, not something the owner decided.
 - It has no prerequisite links for ELA or ELD. Learning components cover 931 California math standards, and Common Core ELA for K–2 only.
 - Each ELD item has a `notes` field listing ELA identifiers ("W.4.4–5; SL.4.4, 6; L.4.1, 3, 5–6"). This looks like the correspondence column of the published CA ELD Standards. Seen on five items; not parsed or checked.
 - Its 284 `relatesTo` links (non-directional) are not imported.
 
-Next: add the 30 missing K–8 parent standards as rows sourced from Learning Commons. Examine the ELD `notes` field as a source of ELD-to-ELA bridge edges. Then learning components as concept tags.
+Next: examine the ELD `notes` field as a source of ELD-to-ELA bridge edges. Then learning components as concept tags.
 
 Open questions:
 - Whether the course "Statistics and Probability" should be linked from both pathways, as the join script now does.
-- Whether an imported link to a parent standard should attach to every sub-item record, as now, or to a parent row once those exist.
+- Which, if any, of the 624 sub-item pairs in `learning_commons_spread_candidates.csv` the owner wants as links. Owner's marks go in a new file in `data/curated/`, since the candidates file is regenerated.
+- Review has not started. The owner asked to be told when the ELA, ELD, and math links are in final form with a sheet for each.
 - The 49 math records whose text differs from the paired Learning Commons item have not been read one by one.
 - Whether `cacs_probe/` stays in the repo; it holds scraper test output and one saved CDE results page.
 - GitHub still serves the commit that held `ccssmgraph.pdf` (20bc256) to anyone with its ID; only GitHub Support can remove it.

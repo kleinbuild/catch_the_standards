@@ -45,9 +45,14 @@ CREATE TABLE cluster_alias (
 -- One row per CDE record (0011). record_id is the number in /cacs/id/web/<n>
 -- and is the only key other tables use. identifier is NOT unique: A-CED.1 is
 -- five records (one per course) and Calculus.16.0 is two different standards.
+--
+-- A few rows are not CDE records: parent standards such as 4.NF.3, which CDE
+-- lists only as its parts (4.NF.3.a, b, c, d). Their text comes from Learning
+-- Commons. They have origin = 'learning_commons', a NEGATIVE record_id (so it
+-- can never be taken for a CDE record ID), and no url.
 CREATE TABLE standards (
     record_id            INTEGER PRIMARY KEY,
-    url                  TEXT NOT NULL,
+    url                  TEXT,
     subject              TEXT NOT NULL CHECK (subject IN ('math', 'ela', 'eld')),
 
     identifier           TEXT NOT NULL,   -- exactly as CDE writes it
@@ -98,7 +103,15 @@ CREATE TABLE standards (
     is_placeholder       INTEGER NOT NULL CHECK (is_placeholder IN (0, 1)),
 
     source_file          TEXT NOT NULL,
-    source_page          INTEGER NOT NULL  -- results page the scraper read the record from
+    source_page          INTEGER,         -- results page the scraper read the record from
+
+    origin               TEXT NOT NULL CHECK (origin IN ('cde', 'learning_commons')),
+    -- For a math sub-item record (4.NF.3.a): the row of its parent (4.NF.3) in
+    -- the same course. NULL when there is no such row.
+    parent_record_id     INTEGER REFERENCES standards (record_id),
+
+    CHECK ((origin = 'cde') = (record_id > 0)),
+    CHECK ((origin = 'cde') = (url IS NOT NULL))
 ) STRICT;
 
 CREATE INDEX idx_standards_identifier_norm ON standards (identifier_norm);

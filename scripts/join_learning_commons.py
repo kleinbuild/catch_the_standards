@@ -34,8 +34,15 @@ Nothing is guessed: a record with no match gets a row saying so.
 It then brings in the math "builds towards" links (the Student Achievement
 Partners coherence map). Those links join Common Core standards, so each end is
 followed from the Common Core item to the California item Learning Commons
-rates as the same (jaccard 1.0), and from there to the CDE record. A parent
-standard with no record of its own (3.NF.2) stands for its sub-item records.
+rates as the same (jaccard 1.0), and from there to the CDE record.
+
+Some standards have no CDE record: CDE lists 4.NF.3.a, b, c and d but not
+4.NF.3 itself. Learning Commons has the parent, so it is written to
+learning_commons_parents.csv and the loader adds it as a row of its own. A
+link that Learning Commons publishes to or from 4.NF.3 then stays one link, on
+the parent. Copying it onto every sub-item would state pairs nobody published;
+those pairs are listed in learning_commons_spread_candidates.csv for the owner
+to look at, and are not loaded.
 
 High school standards are one record per course, so a link has to choose which
 course copies to join. The rule (owner's decision, 2026-11-14) is "same
@@ -48,7 +55,9 @@ standard, having one record, links to every course copy. The course
 Writes to data/derived/:
   learning_commons_map.csv               one row per pairing (or per unmatched record)
   learning_commons_unmapped.csv          California items no CDE record pairs with
-  learning_commons_edges.csv             builds-towards links between CDE records; the loader reads this
+  learning_commons_parents.csv           parent standards CDE has no record for; the loader reads this
+  learning_commons_edges.csv             builds-towards links between rows; the loader reads this
+  learning_commons_spread_candidates.csv sub-item pairs a link to a parent could also mean; not loaded
   learning_commons_edges_unresolved.csv  links not written, and why
   learning_commons_source.json           which Learning Commons files were read
 """
@@ -238,68 +247,124 @@ def pathway_pairs(from_records, to_records):
     return pairs
 
 
-def import_edges(rows, items, graph):
-    """Returns (edge rows, unresolved rows). See the top of this file for the rule."""
-    records_of = defaultdict(set)           # Learning Commons identifier -> CDE record IDs
-    info = {}                               # record ID -> (identifier, discipline)
+def math_records_of(rows):
+    """Learning Commons identifier -> CDE record IDs, and record ID -> (identifier, course)."""
+    records_of, info = defaultdict(set), {}
     for r in rows:
         if r[2] == "math" and r[1] == "" and r[6]:
             records_of[r[6]].add(r[0])
             info[r[0]] = (r[3], r[4])
+    return records_of, info
+
+
+def build_parents(rows, items, graph, records):
+    """Parent standards that have no CDE record but whose sub-items do.
+
+    Returns (rows for learning_commons_parents.csv,
+             {Learning Commons identifier: {row_id: course}}).
+    The row_id is negative and worked out from the Learning Commons identifier
+    and the course, so it is the same every time the script runs.
+    """
+    rec = {r["record_id"]: r for r in records if r["subject"] == "math"}
+    records_of, _ = math_records_of(rows)
+    existing = {(r["join_identifier"], r["discipline"] or "") for r in rec.values()}
+    parents, parent_ids, taken = [], defaultdict(dict), set()
+    for item in sorted(items.values(), key=lambda i: i["lc_identifier"]):
+        if item["subject"] != "math" or item["type"] != "Standard" or records_of[item["lc_identifier"]]:
+            continue
+        identifier = cde_form(item["code"], item["course"])
+        by_course = defaultdict(list)
+        for child in graph["children"].get(item["lc_identifier"], []):
+            for k in records_of[child]:
+                if rec[k]["parent_identifier_norm"] == identifier:
+                    by_course[rec[k]["discipline"] or ""].append(k)
+        for course, kids in sorted(by_course.items()):
+            kids = sorted(set(kids))
+            if (identifier, course) in existing or len({rec[k]["grade_label"] for k in kids}) != 1:
+                continue
+            digest = hashlib.sha256(f"{item['lc_identifier']}|{course}".encode()).hexdigest()
+            row_id = -int(digest[:7], 16)
+            if row_id in taken:
+                sys.exit(f"Two parent standards came out with the same row_id {row_id}.")
+            taken.add(row_id)
+            parents.append([row_id, "math", identifier, course, rec[kids[0]]["grade_label"],
+                            item["text"], " ".join(map(str, kids)), item["case_uuid"],
+                            item["lc_identifier"], item["code"], "learning_commons", 0])
+            parent_ids[item["lc_identifier"]][row_id] = course
+    return sorted(parents, key=lambda r: (r[3], r[2])), parent_ids
+
+
+def import_edges(rows, items, graph, parents, parent_ids):
+    """Returns (edge rows, unresolved rows, spread-candidate rows)."""
+    records_of, info = math_records_of(rows)
+    for parent in parents:
+        info[parent[0]] = (parent[2], parent[3])
     copies = defaultdict(list)              # code -> every California math item with that code
     for item in items.values():
         if item["subject"] == "math" and item["code"]:
             copies[item["code"]].append(item["lc_identifier"])
 
-    def resolve(ccss_id):
-        """({record_id: course}, how, problem). Empty dict when there is a problem."""
+    def resolve(ccss_id, use_parents):
+        """({row_id: course}, note, problem, True if a parent row was used)."""
         ca_items = graph["same_as"].get(ccss_id, [])
         if not ca_items:
-            return {}, "", "no California item rated the same (jaccard 1.0)"
+            return {}, "", "no California item rated the same (jaccard 1.0)", False
         # Learning Commons rates one copy of a high school standard against
         # Common Core; the per-course copies carry the same code.
         every_copy = {c for item in ca_items for c in copies[items[item]["code"]]} | set(ca_items)
-        found, how = set(), ""
+        found, note, used_parent = set(), "", False
         for item in every_copy:
             if records_of[item]:
                 found |= records_of[item]
-            else:                           # a parent with no record: use its sub-items
+            elif parent_ids.get(item):
+                used_parent = True
+                if use_parents:
+                    found |= set(parent_ids[item])
+                else:
+                    for row_id in parent_ids[item]:
+                        found |= {int(k) for p in parents if p[0] == row_id for k in p[6].split()}
+            else:                           # no record and no parent row: fall back to sub-items
                 kids = set()
                 for child in graph["children"].get(item, []):
                     kids |= records_of[child]
                 if kids:
                     found |= kids
-                    how = "parent standard has no CDE record; linked through its sub-items"
+                    note = "parent standard has no row; linked through its sub-items"
         if not found:
-            return {}, "", "the California item has no CDE record"
+            return {}, "", "the California item has no CDE record", False
         outside = sorted({info[r][1] for r in found} - set(PATHWAYS))
         if outside:
-            return {}, "", f"course not placed in a pathway: {', '.join(outside)}"
-        return {r: info[r][1] for r in found}, how, ""
+            return {}, "", f"course not placed in a pathway: {', '.join(outside)}", False
+        return {r: info[r][1] for r in found}, note, "", used_parent
 
-    edges, unresolved, seen = [], [], set()
+    edges, unresolved, candidates, seen = [], [], [], set()
     for a, b, rel_id in graph["builds"]:
         code_a, code_b = graph["ccss"][a], graph["ccss"][b]
-        from_records, how_a, problem_a = resolve(a)
-        to_records, how_b, problem_b = resolve(b)
+        from_rows, note_a, problem_a, parent_a = resolve(a, True)
+        to_rows, note_b, problem_b, parent_b = resolve(b, True)
         if problem_a or problem_b:
             unresolved.append([code_a, code_b, problem_a, problem_b, rel_id])
             continue
-        pairs = pathway_pairs(from_records, to_records)
+        pairs = pathway_pairs(from_rows, to_rows)
         if not pairs:
             unresolved.append([code_a, code_b, "no copy at or before the later standard's "
                                "course in the same pathway", "", rel_id])
             continue
-        high_school = any(from_records.values()) or any(to_records.values())
-        note = "; ".join(dict.fromkeys(h for h in (
-            how_a, how_b, "high school: course copies joined within the same pathway"
-            if high_school else "") if h))
+        high_school = any(from_rows.values()) or any(to_rows.values())
+        note = "; ".join(dict.fromkeys(n for n in (
+            note_a, note_b, "high school: course copies joined within the same pathway"
+            if high_school else "") if n))
         for x, y in sorted(pairs):
             if (x, y) not in seen:
                 seen.add((x, y))
                 edges.append([x, y, "builds_towards", "learning_commons", note, 0,
                               info[x][0], info[y][0], code_a, code_b, rel_id])
-    return edges, unresolved
+        if parent_a or parent_b:            # what copying onto sub-items would have produced
+            spread = pathway_pairs(resolve(a, False)[0], resolve(b, False)[0])
+            for x, y in sorted(spread - pairs):
+                candidates.append([rel_id, code_a, code_b, x, info[x][0], info[x][1],
+                                   y, info[y][0], info[y][1]])
+    return edges, unresolved, candidates
 
 
 # ---------- pairing ----------
@@ -438,9 +503,10 @@ def main():
     con = sqlite3.connect(args.db)
     con.row_factory = sqlite3.Row       # lets rows be read by column name
     # join_identifier: the corrected identifier where CDE's own is wrong.
+    # origin = 'cde' leaves out parent rows an earlier run of this script supplied.
     records = con.execute(
         "SELECT *, COALESCE(identifier_corrected, identifier_norm) AS join_identifier "
-        "FROM standards ORDER BY subject, record_id").fetchall()
+        "FROM standards WHERE origin = 'cde' ORDER BY subject, record_id").fetchall()
     sub_items = defaultdict(list)
     for r in con.execute("SELECT record_id, letter, text FROM sub_items ORDER BY record_id, letter"):
         sub_items[r["record_id"]].append((r["letter"], r["text"]))
@@ -450,7 +516,8 @@ def main():
     print(f"reading {graph_dir} (two large files; about a minute) ...")
     items, graph, nodes_path, rels_path = read_california_items(graph_dir)
     rows, used = pair(records, sub_items, items)
-    edges, unresolved = import_edges(rows, items, graph)
+    parents, parent_ids = build_parents(rows, items, graph, records)
+    edges, unresolved, candidates = import_edges(rows, items, graph, parents, parent_ids)
 
     args.out.mkdir(parents=True, exist_ok=True)
     with open(args.out / "learning_commons_map.csv", "w", newline="", encoding="utf-8") as f:
@@ -469,6 +536,19 @@ def main():
         for i in unmapped:
             w.writerow([i["subject"], i["code"], i["type"], i["course"], " ".join(i["grades"]),
                         i["parent_code"], i["case_uuid"], i["lc_identifier"]])
+    with open(args.out / "learning_commons_parents.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["row_id", "subject", "identifier", "discipline", "grade_label", "text",
+                    "child_record_ids", "lc_case_uuid", "lc_identifier", "lc_statement_code",
+                    "source", "reviewed"])
+        w.writerows(parents)
+    with open(args.out / "learning_commons_spread_candidates.csv", "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["lc_relationship_id", "published_from", "published_to", "from_record_id",
+                    "from_identifier", "from_discipline", "to_record_id", "to_identifier",
+                    "to_discipline"])
+        w.writerows(sorted(candidates, key=lambda c: (c[1], c[2], c[3], c[6])))
     with open(args.out / "learning_commons_edges.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, lineterminator="\n")
         w.writerow(["from_record_id", "to_record_id", "type", "source", "note", "reviewed",
@@ -509,8 +589,13 @@ def main():
     print(f"\nCalifornia standards and components no record pairs with: {len(unmapped)}")
     for (subject, kind), n in sorted(Counter((i['subject'], i['type']) for i in unmapped).items()):
         print(f"    {subject:5} {kind:10} {n}")
+    print(f"\nparent standards with no CDE record, added from Learning Commons: {len(parents)}")
+    for course, n in sorted(Counter(p[3] or "K-8" for p in parents).items()):
+        print(f"    {n:5}  {course}")
     print(f"\nbuilds-towards links in Learning Commons: {len(graph['builds'])}")
-    print(f"    {len(graph['builds']) - len(unresolved):5}  written, as {len(edges)} links between CDE records")
+    print(f"    {len(graph['builds']) - len(unresolved):5}  written, as {len(edges)} links between rows")
+    print(f"           ({len({c[0] for c in candidates})} of them touch a parent standard; the "
+          f"{len(candidates)} sub-item pairs they could also mean are listed, not loaded)")
     for why, n in Counter(u[2] or u[3] for u in unresolved).most_common():
         print(f"    {n:5}  not written: {why}")
     print(f"\nWrote {args.out}")
