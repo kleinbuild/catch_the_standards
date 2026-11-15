@@ -86,10 +86,10 @@ tests/             test_load.py, test_join.py, test_lookup.py; run with `python 
 Work is on branch `build/loader` here (pushed) and `dev/private-sources` in the private repo (local, nothing committed on it).
 
 Done:
-- `python src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, and 2,346 edges (1,187 `next_grade` and 514 `next_level` structural; 645 `builds_towards` from Learning Commons). No edge is reviewed.
+- `python src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, and 3,255 edges (1,187 `next_grade` and 514 `next_level` structural; 1,554 `builds_towards` from Learning Commons). No edge is reviewed.
 - `python scripts/join_learning_commons.py` pairs CDE records with Learning Commons California items: math 734 of 734, ELA 544 of 568, ELD 771 of 771, and every ELA sub-item. Output is in `data/derived/`.
 - `python src/lookup.py <identifier>` prints what a standard builds on, with the source of each link.
-- 45 tests pass (`python -m unittest discover tests`).
+- 52 tests pass (`python -m unittest discover tests`).
 - The cross-check of CSV rows against scraped records (0011) was re-run on 2026-11-14 with the same counts.
 
 Facts found on 2026-11-14, not yet in a decision record:
@@ -107,15 +107,16 @@ Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-1
 - Its item codes are its own, not CDE identifiers. Math codes carry the cluster letter and an HS prefix (3.NF.A.2, HSA-CED.A.1), and California's own additions are written with a dot (HSF.LE.A.4.1). `cde_form()` in the join script rewrites them. High school standards are one item per course, as on the CDE site, plus one copy under no course.
 - Its ELD codes have no letter and no proficiency level (ELD.4.I.C.12), so several CDE records share one item.
 - Math text agrees for 512 of 734 records and one text contains the other for 173; 49 differ and are marked in `learning_commons_map.csv`. CDE repeats the parent sentence before a sub-item, and one side or the other omits the worked examples.
-- 757 `buildsTowards` links (Student Achievement Partners coherence map, CC0) join Common Core math standards. 453 are imported as 645 record-to-record edges. 292 involve high school and are not imported; they are listed in `learning_commons_edges_unresolved.csv`.
+- 757 `buildsTowards` links (Student Achievement Partners coherence map, CC0) join Common Core math standards. 727 are imported as 1,554 record-to-record edges: 645 between K–8 records and 909 with a high school record at one or both ends. 30 are not imported and are listed in `learning_commons_edges_unresolved.csv`: for 28 the California item has no CDE record (F-TF.3, N-CN.4, G-GMD.2 and others; why CDE lacks them is not checked), and for 2 no California item is rated the same as the Common Core one.
+- High school pairing rule (owner's decision, 2026-11-14): same pathway. Course copies are joined within Algebra I / Geometry / Algebra II and within Math I / II / III, never across. Each later standard is linked from the nearest copy of the earlier standard at or before its own course; a K–8 standard links to every course copy. Treating the course "Statistics and Probability" as following either pathway is an assumption made in the script, not something the owner decided.
 - It has no prerequisite links for ELA or ELD. Learning components cover 931 California math standards, and Common Core ELA for K–2 only.
 - Each ELD item has a `notes` field listing ELA identifiers ("W.4.4–5; SL.4.4, 6; L.4.1, 3, 5–6"). This looks like the correspondence column of the published CA ELD Standards. Seen on five items; not parsed or checked.
 - Its 284 `relatesTo` links (non-directional) are not imported.
 
-Next: decide the high school math pairing rule. Add the 30 missing K–8 parent standards as rows sourced from Learning Commons. Examine the ELD `notes` field as a source of ELD-to-ELA bridge edges. Then learning components as concept tags.
+Next: add the 30 missing K–8 parent standards as rows sourced from Learning Commons. Examine the ELD `notes` field as a source of ELD-to-ELA bridge edges. Then learning components as concept tags.
 
 Open questions:
-- How to pair course copies for high school math links: a link from A-CED.1 to another standard could mean every course copy, the same course only, or the same pathway (Algebra I/Geometry/Algebra II versus Math I/II/III).
+- Whether the course "Statistics and Probability" should be linked from both pathways, as the join script now does.
 - Whether an imported link to a parent standard should attach to every sub-item record, as now, or to a parent row once those exist.
 - The 49 math records whose text differs from the paired Learning Commons item have not been read one by one.
 - Whether `cacs_probe/` stays in the repo; it holds scraper test output and one saved CDE results page.

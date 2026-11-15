@@ -45,6 +45,38 @@ class CodeRewrite(unittest.TestCase):
             self.assertEqual(join.cde_form(code, ""), code)
 
 
+class PathwayPairs(unittest.TestCase):
+    """Record IDs here are made up; the letters stand for courses."""
+
+    def test_k8_to_k8(self):
+        self.assertEqual(join.pathway_pairs({1: ""}, {2: ""}), {(1, 2)})
+
+    def test_k8_links_to_every_course_copy(self):
+        self.assertEqual(join.pathway_pairs({1: ""}, {2: "Algebra I", 3: "Math I"}),
+                         {(1, 2), (1, 3)})
+
+    def test_same_course_copies_are_joined(self):
+        earlier = {1: "Algebra I", 2: "Algebra II", 3: "Math I"}
+        later = {4: "Algebra I", 5: "Algebra II", 6: "Math I"}
+        self.assertEqual(join.pathway_pairs(earlier, later), {(1, 4), (2, 5), (3, 6)})
+
+    def test_nearest_earlier_course_in_the_pathway(self):
+        earlier = {1: "Algebra I", 2: "Math I"}
+        later = {3: "Algebra II", 4: "Math III"}
+        self.assertEqual(join.pathway_pairs(earlier, later), {(1, 3), (2, 4)})
+
+    def test_never_across_pathways(self):
+        self.assertEqual(join.pathway_pairs({1: "Algebra I"}, {2: "Math III"}), set())
+
+    def test_never_from_a_later_course(self):
+        self.assertEqual(join.pathway_pairs({1: "Algebra II"}, {2: "Algebra I"}), set())
+
+    def test_statistics_course_follows_either_pathway(self):
+        earlier = {1: "Algebra I", 2: "Math I"}
+        self.assertEqual(join.pathway_pairs(earlier, {3: "Statistics and Probability"}),
+                         {(1, 3), (2, 3)})
+
+
 class TextCheck(unittest.TestCase):
 
     def test_same_despite_dashes_and_quotes(self):

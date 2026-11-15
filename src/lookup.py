@@ -11,7 +11,7 @@ lookup.py - show what a standard builds on.
 Reads data/build/standards.db (run `python src/load.py` first) and follows the
 edges backwards from the standard you name: to the same strand in the grade
 below, to the proficiency level below (ELD), and to the standards Learning
-Commons says build towards it (math, K-8).
+Commons says build towards it (math).
 
 No link has been reviewed by the owner yet. The source of each is shown so you
 can judge it.
@@ -130,9 +130,6 @@ def show(con, row, letter, depth, sub_items):
     found, more = walk_back(con, row["record_id"], depth)
     if not found:
         print("\nNothing recorded that this builds on.")
-        if row["subject"] == "math" and row["discipline"]:
-            print("High school math links are not loaded yet: the rule for pairing "
-                  "course copies is undecided.")
         return
     print("\nBuilds on:")
     for steps in sorted({f[0] for f in found}):

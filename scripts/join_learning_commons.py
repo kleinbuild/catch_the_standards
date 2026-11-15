@@ -34,11 +34,16 @@ Nothing is guessed: a record with no match gets a row saying so.
 It then brings in the math "builds towards" links (the Student Achievement
 Partners coherence map). Those links join Common Core standards, so each end is
 followed from the Common Core item to the California item Learning Commons
-rates as the same (jaccard 1.0), and from there to the CDE record. A link is
-written only when each end comes out as records with no choice to make. A
-parent standard with no record of its own (3.NF.2) stands for its sub-item
-records. High school links are left out for now: the same standard is a
-separate record in each course, and which course pairs with which is undecided.
+rates as the same (jaccard 1.0), and from there to the CDE record. A parent
+standard with no record of its own (3.NF.2) stands for its sub-item records.
+
+High school standards are one record per course, so a link has to choose which
+course copies to join. The rule (owner's decision, 2026-11-14) is "same
+pathway": copies are joined within Algebra I / Geometry / Algebra II and within
+Math I / II / III, never across the two. Each later standard is linked from the
+nearest copy of the earlier standard at or before its own course. A K-8
+standard, having one record, links to every course copy. The course
+"Statistics and Probability" is treated as following either pathway.
 
 Writes to data/derived/:
   learning_commons_map.csv               one row per pairing (or per unmatched record)
@@ -208,6 +213,31 @@ def read_california_items(graph_dir):
 
 # ---------- builds-towards links ----------
 
+# Where each course sits. K-8 records have no course ("") and come before all.
+PATHWAYS = {
+    "": ("traditional", "integrated"),
+    "Algebra I": ("traditional",), "Geometry": ("traditional",), "Algebra II": ("traditional",),
+    "Math I": ("integrated",), "Math II": ("integrated",), "Math III": ("integrated",),
+    "Statistics and Probability": ("traditional", "integrated"),
+}
+COURSE_ORDER = {"": 0, "Algebra I": 1, "Math I": 1, "Geometry": 2, "Math II": 2,
+                "Algebra II": 3, "Math III": 3, "Statistics and Probability": 4}
+
+
+def pathway_pairs(from_records, to_records):
+    """Which (from, to) record pairs a link becomes. Each argument is a dict
+    {record_id: course}. See the top of this file for the rule."""
+    pairs = set()
+    for b, course_b in to_records.items():
+        for pathway in PATHWAYS[course_b]:
+            earlier = {a: COURSE_ORDER[c] for a, c in from_records.items()
+                       if pathway in PATHWAYS[c] and COURSE_ORDER[c] <= COURSE_ORDER[course_b]}
+            if earlier:
+                nearest = max(earlier.values())
+                pairs |= {(a, b) for a, order in earlier.items() if order == nearest and a != b}
+    return pairs
+
+
 def import_edges(rows, items, graph):
     """Returns (edge rows, unresolved rows). See the top of this file for the rule."""
     records_of = defaultdict(set)           # Learning Commons identifier -> CDE record IDs
@@ -216,14 +246,21 @@ def import_edges(rows, items, graph):
         if r[2] == "math" and r[1] == "" and r[6]:
             records_of[r[6]].add(r[0])
             info[r[0]] = (r[3], r[4])
+    copies = defaultdict(list)              # code -> every California math item with that code
+    for item in items.values():
+        if item["subject"] == "math" and item["code"]:
+            copies[item["code"]].append(item["lc_identifier"])
 
     def resolve(ccss_id):
-        """(record IDs, how, problem). Record IDs is empty when there is a problem."""
+        """({record_id: course}, how, problem). Empty dict when there is a problem."""
         ca_items = graph["same_as"].get(ccss_id, [])
         if not ca_items:
-            return set(), "", "no California item rated the same (jaccard 1.0)"
+            return {}, "", "no California item rated the same (jaccard 1.0)"
+        # Learning Commons rates one copy of a high school standard against
+        # Common Core; the per-course copies carry the same code.
+        every_copy = {c for item in ca_items for c in copies[items[item]["code"]]} | set(ca_items)
         found, how = set(), ""
-        for item in ca_items:
+        for item in every_copy:
             if records_of[item]:
                 found |= records_of[item]
             else:                           # a parent with no record: use its sub-items
@@ -234,26 +271,34 @@ def import_edges(rows, items, graph):
                     found |= kids
                     how = "parent standard has no CDE record; linked through its sub-items"
         if not found:
-            return set(), "", "the California item has no CDE record"
-        if any(info[r][1] for r in found):
-            return set(), "", "high school: one record per course, pairing undecided"
-        return found, how, ""
+            return {}, "", "the California item has no CDE record"
+        outside = sorted({info[r][1] for r in found} - set(PATHWAYS))
+        if outside:
+            return {}, "", f"course not placed in a pathway: {', '.join(outside)}"
+        return {r: info[r][1] for r in found}, how, ""
 
     edges, unresolved, seen = [], [], set()
     for a, b, rel_id in graph["builds"]:
         code_a, code_b = graph["ccss"][a], graph["ccss"][b]
-        from_ids, how_a, problem_a = resolve(a)
-        to_ids, how_b, problem_b = resolve(b)
+        from_records, how_a, problem_a = resolve(a)
+        to_records, how_b, problem_b = resolve(b)
         if problem_a or problem_b:
             unresolved.append([code_a, code_b, problem_a, problem_b, rel_id])
             continue
-        note = "; ".join(dict.fromkeys(h for h in (how_a, how_b) if h))
-        for x in sorted(from_ids):
-            for y in sorted(to_ids):
-                if x != y and (x, y) not in seen:
-                    seen.add((x, y))
-                    edges.append([x, y, "builds_towards", "learning_commons", note, 0,
-                                  info[x][0], info[y][0], code_a, code_b, rel_id])
+        pairs = pathway_pairs(from_records, to_records)
+        if not pairs:
+            unresolved.append([code_a, code_b, "no copy at or before the later standard's "
+                               "course in the same pathway", "", rel_id])
+            continue
+        high_school = any(from_records.values()) or any(to_records.values())
+        note = "; ".join(dict.fromkeys(h for h in (
+            how_a, how_b, "high school: course copies joined within the same pathway"
+            if high_school else "") if h))
+        for x, y in sorted(pairs):
+            if (x, y) not in seen:
+                seen.add((x, y))
+                edges.append([x, y, "builds_towards", "learning_commons", note, 0,
+                              info[x][0], info[y][0], code_a, code_b, rel_id])
     return edges, unresolved
 
 
