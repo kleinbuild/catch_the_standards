@@ -62,6 +62,7 @@ level or letter, and it is written out that way.
 Writes to data/derived/:
   learning_commons_map.csv               one row per pairing (or per unmatched record)
   learning_commons_unmapped.csv          California items no CDE record pairs with
+  learning_commons_text_differs.csv      both texts, for pairings whose text differs; for the review sheet
   learning_commons_parents.csv           parent standards CDE has no record for; the loader reads this
   learning_commons_edges.csv             builds-towards links between rows; the loader reads this
   learning_commons_spread_candidates.csv sub-item pairs a link to a parent could also mean; not loaded
@@ -619,6 +620,16 @@ def main():
         for i in unmapped:
             w.writerow([i["subject"], i["code"], i["type"], i["course"], " ".join(i["grades"]),
                         i["parent_code"], i["case_uuid"], i["lc_identifier"]])
+    text_of = {r["record_id"]: r["text_standard"] for r in records}
+    with open(args.out / "learning_commons_text_differs.csv", "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["record_id", "identifier", "discipline", "lc_statement_code", "lc_identifier",
+                    "text_similarity", "cde_text", "lc_text"])
+        for r in rows:
+            if r[11] == "differs" and r[1] == "":
+                w.writerow([r[0], r[3], r[4], r[7], r[6], r[12],
+                            " ".join(text_of[r[0]].split()), " ".join(items[r[6]]["text"].split())])
     with open(args.out / "learning_commons_eld_ela.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, lineterminator="\n")
         w.writerow(["eld_part", "eld_number", "eld_grade_label", "eld_grade_min", "eld_grade_max",

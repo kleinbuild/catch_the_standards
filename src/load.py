@@ -7,8 +7,8 @@ load.py - rebuild data/build/standards.db from the scraped records files.
 Reads the newest data/raw/<subject>_records_<date>.csv for math, ela and eld,
 docs/reference/codes.csv, data/curated/identifier_corrections.csv and, if they
 exist, three files in data/derived/ (learning_commons_parents.csv,
-learning_commons_edges.csv, learning_commons_eld_ela.csv), and writes
-data/build/standards.db. The old database is replaced, never updated in place
+learning_commons_edges.csv, learning_commons_eld_ela.csv), and the owner's
+decisions in data/curated/review/, and writes data/build/standards.db. The old database is replaced, never updated in place
 (decisions 0007, 0010).
 
 Every standard is keyed by its CDE record ID (0011). Text and identifiers are
@@ -417,10 +417,61 @@ def read_imported_edges(path, known_ids):
     return edges
 
 
+def read_decisions(review_dir):
+    """The owner's decisions on links, from the sheets in data/curated/review/.
+
+    Returns (decisions, pending). A decision is (from, to, type, 'keep' or
+    'reject', note, sheet name) and counts only where the row has reviewed = 1.
+    pending counts rows with a decision written but reviewed still 0.
+    """
+    decisions, pending = [], 0
+    if not review_dir or not review_dir.exists():
+        return decisions, pending
+    for path in sorted(review_dir.glob("*.csv")):
+        # utf-8-sig reads the file with or without the marker Excel puts at the start
+        with open(path, encoding="utf-8-sig", newline="") as f:
+            reader = csv.DictReader(f)
+            if "from_record_id" not in (reader.fieldnames or []):
+                continue                    # pairings and ELD notes: recorded, not applied here
+            for line, r in enumerate(reader, start=2):
+                decision = (r["decision"] or "").strip().lower()
+                if (r["reviewed"] or "").strip() != "1":
+                    pending += bool(decision)
+                    continue
+                if decision not in ("keep", "reject"):
+                    raise LoadError(f"{path.name} line {line}: reviewed is 1 but decision is "
+                                    f"{r['decision']!r}. Write keep or reject.")
+                decisions.append((int(r["from_record_id"]), int(r["to_record_id"]), r["type"],
+                                  decision, (r["owner_note"] or "").strip() or None, path.name))
+    return decisions, pending
+
+
+def apply_decisions(con, decisions):
+    """keep: mark the link reviewed, adding it if it is not there (a candidate
+    the owner accepted). reject: leave the link out."""
+    kept = added = rejected = 0
+    for a, b, kind, decision, note, sheet in decisions:
+        where = "from_record_id = ? AND to_record_id = ? AND type = ?"
+        present = con.execute(f"SELECT COUNT(*) FROM edges WHERE {where}", (a, b, kind)).fetchone()[0]
+        if decision == "reject":
+            con.execute(f"DELETE FROM edges WHERE {where}", (a, b, kind))
+            rejected += 1
+        elif present:
+            con.execute(f"UPDATE edges SET reviewed = 1 WHERE {where}", (a, b, kind))
+            kept += 1
+        else:
+            try:
+                con.execute("INSERT INTO edges VALUES (?, ?, ?, 'owner', ?, 1)", (a, b, kind, note))
+            except sqlite3.IntegrityError:
+                raise LoadError(f"{sheet}: record {a} or {b} is not in the database.") from None
+            added += 1
+    return {"kept": kept, "added": added, "rejected": rejected}
+
+
 # ---------- building the database ----------
 
 def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edges_path=None,
-          parents_path=None, eld_ela_path=None):
+          parents_path=None, eld_ela_path=None, review_dir=None):
     """Read everything, then write the database. Returns a summary dict."""
     codes = read_codes(codes_path)
     corrections = read_corrections(corrections_path) if corrections_path else {}
@@ -447,6 +498,7 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
     known_ids = set(seen) | {int(p["row_id"]) for p in parents}
     imported = read_imported_edges(edges_path, known_ids) if edges_path else []
     eld_ela = read_eld_ela(eld_ela_path, known_ids) if eld_ela_path else []
+    decisions, pending = read_decisions(review_dir)
 
     # Build into a temporary file and swap it in at the end, so a failure
     # part-way never leaves a half-written standards.db behind.
@@ -454,6 +506,7 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
     tmp_path = db_path.with_name(db_path.name + ".tmp")
     tmp_path.unlink(missing_ok=True)
     con = sqlite3.connect(tmp_path)
+    con.execute("PRAGMA foreign_keys = ON")     # refuse a link to a record that does not exist
     try:
         con.executescript(schema_path.read_text(encoding="utf-8"))
         con.executemany("INSERT INTO build_info VALUES (?, ?)", [
@@ -493,6 +546,8 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
         summary["eld_ela_links"] = len(eld_ela)
         edges = structural_edges(con) + imported
         con.executemany("INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?)", edges)
+        summary["decisions"] = apply_decisions(con, decisions)
+        summary["decisions"]["pending"] = pending
         summary["edges"] = con.execute(
             "SELECT type, source, COUNT(*) FROM edges GROUP BY 1, 2 ORDER BY 1, 2").fetchall()
         con.commit()
@@ -514,7 +569,8 @@ def main():
                         ROOT / "data" / "curated" / "identifier_corrections.csv",
                         ROOT / "data" / "derived" / "learning_commons_edges.csv",
                         ROOT / "data" / "derived" / "learning_commons_parents.csv",
-                        ROOT / "data" / "derived" / "learning_commons_eld_ela.csv")
+                        ROOT / "data" / "derived" / "learning_commons_eld_ela.csv",
+                        ROOT / "data" / "curated" / "review")
     except LoadError as e:
         sys.exit(f"Load stopped, database not changed.\n  {e}")
 
@@ -536,6 +592,11 @@ def main():
     print("\nedges:")
     for kind, source, n in summary["edges"]:
         print(f"  {n:5}  {kind} ({source})")
+    d = summary["decisions"]
+    print(f"\nowner's decisions applied: {d['kept']} links marked reviewed, {d['added']} added, "
+          f"{d['rejected']} left out")
+    if d["pending"]:
+        print(f"  {d['pending']} rows have a decision written but reviewed is still 0; not applied")
     print(f"\nWrote {args.db}")
 
 

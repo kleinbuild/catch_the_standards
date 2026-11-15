@@ -39,6 +39,7 @@ scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE 
                    match_csv_to_records.py (pairs dl=1 CSV rows with scraped records)
                    probe_cacs_ids.py (fetch one HTML results page and report record links and symbols)
                    join_learning_commons.py (pairs CDE records with Learning Commons items; imports math builds-towards links; writes data/derived/)
+                   make_review_sheets.py (writes the owner's review sheets to data/curated/review/; adds rows, never changes them)
                    cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads; ELA only, 0001)
                    math_cross_domain_check.py, show_rows.py (exploratory checks on the math dl=1 CSV)
                    setup_venv.sh, setup_venv.ps1 (create .venv and install requirements)
@@ -90,7 +91,8 @@ Done:
 - `python scripts/join_learning_commons.py` pairs CDE records with Learning Commons California items: math 734 of 734, ELA 544 of 568, ELD 771 of 771, and every ELA sub-item. Output is in `data/derived/`.
 - `python src/lookup.py <identifier>` prints what a standard builds on, with the source of each link.
 - `lookup.py` also shows, for an ELD record, the ELA standards listed against its ELD standard, and for an ELA record, the ELD standards that list it.
-- 69 tests pass (`python -m unittest discover tests`).
+- `python scripts/make_review_sheets.py` wrote six sheets to `data/curated/review/` (how to mark them: the README there). The loader applies decisions from the link sheets where a row has `reviewed=1`: `keep` marks the link reviewed, or adds it with source `owner` if it was a candidate; `reject` leaves it out. Decisions on `pairings.csv` and `eld_ela_notes.csv` are recorded and not yet acted on.
+- 77 tests pass (`python -m unittest discover tests`).
 - The cross-check of CSV rows against scraped records (0011) was re-run on 2026-11-14 with the same counts.
 
 Facts found on 2026-11-14, not yet in a decision record:
@@ -120,12 +122,14 @@ Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-1
 - The notes have not been compared with the published CA ELD Standards document, which is the source they appear to copy.
 - Its 284 `relatesTo` links (non-directional) are not imported.
 
-Next: review sheets in `data/curated/` for the ELA, ELD, and math links and the ELD-to-ELA pairs, then tell the owner the review stage has been reached. Then learning components as concept tags.
+Review stage reached 2026-11-14: the sheets are with the owner and none is marked yet. What each sheet holds: `ela_links.csv` 44 next-grade links whose wording is under 30% alike; `eld_links.csv` 48 links where lettering changes and 9 whose wording is under 30% alike; `math_links.csv` 19 links that jump three or more grades and 45 involving the Statistics and Probability course; `math_link_candidates.csv` the 624 set-aside sub-item pairs; `pairings.csv` 58 records (49 math, 9 ELA) whose text differs from their Learning Commons item; `eld_ela_notes.csv` 206 ELD notes, 22 of them (one per part per grade) marked as the sample to compare with the published CA ELD Standards.
+
+Next: act on the owner's decisions as they come. Then learning components as concept tags.
 
 Open questions:
 - Whether the course "Statistics and Probability" should be linked from both pathways, as the join script now does.
-- Which, if any, of the 624 sub-item pairs in `learning_commons_spread_candidates.csv` the owner wants as links. Owner's marks go in a new file in `data/curated/`, since the candidates file is regenerated.
-- Review has not started. The owner asked to be told when the ELA, ELD, and math links are in final form with a sheet for each.
+- No link from the course Statistics and Probability back to a pathway course exists in the data, so the "either pathway" assumption affects only the 45 links listed in `math_links.csv`.
+- Links not on any sheet (most of them) stay `reviewed=0`. Whether the owner wants a way to mark whole groups as accepted has not been asked.
 - The 49 math records whose text differs from the paired Learning Commons item have not been read one by one.
 - Whether `cacs_probe/` stays in the repo; it holds scraper test output and one saved CDE results page.
 - GitHub still serves the commit that held `ccssmgraph.pdf` (20bc256) to anyone with its ID; only GitHub Support can remove it.
