@@ -38,14 +38,17 @@ docs/reference/    glossary.md (project terms); generated CACS_URL_REFERENCE.md,
 scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE record; the standards source, 0011)
                    match_csv_to_records.py (pairs dl=1 CSV rows with scraped records)
                    probe_cacs_ids.py (fetch one HTML results page and report record links and symbols)
+                   join_learning_commons.py (pairs CDE records with Learning Commons items; imports math builds-towards links; writes data/derived/)
                    cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads; ELA only, 0001)
                    math_cross_domain_check.py, show_rows.py (exploratory checks on the math dl=1 CSV)
                    setup_venv.sh, setup_venv.ps1 (create .venv and install requirements)
-src/               schema.sql (tables), load.py (rebuilds data/build/standards.db from data/raw; standard library only)
+src/               schema.sql (tables), load.py (rebuilds data/build/standards.db; standard library only)
+                   lookup.py (what a standard builds on: `python src/lookup.py L.5.1b`)
 data/raw/          scraped records files (UTF-8) and dl=1 CSV downloads (cp1252), committed, named with date
-data/curated/      hand-reviewed data: concepts, reviewed edges. The owner's expert work.
+data/curated/      hand-reviewed data: identifier_corrections.csv; later concepts and reviewed edges. The owner's expert work.
+data/derived/      output of join_learning_commons.py, committed: IDs and codes, no standards text. Regenerated, not hand-edited.
 data/build/        standards.db, rebuilt by load.py, never committed
-tests/             test_load.py; run with `python -m unittest discover tests`
+tests/             test_load.py, test_join.py, test_lookup.py; run with `python -m unittest discover tests`
 ```
 
 
@@ -80,35 +83,47 @@ tests/             test_load.py; run with `python -m unittest discover tests`
 
 ## Current state (2026-11-14)
 
-Done: scraped records for math, ELA, and ELD are in `data/raw/`, and every dl=1 CSV row pairs with one scraped record (0011; re-run 2026-11-14 with the same counts).
-`src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, identifier parts, grade_min/grade_max, the ELA cluster alias. 22 tests pass.
-`.gitattributes` stores `data/raw/`, `data/curated/`, and `cacs_probe/` byte for byte; git was converting their line endings on Windows.
-Work is on branch `build/loader` here and `dev/private-sources` in the private repo.
+Work is on branch `build/loader` here (pushed) and `dev/private-sources` in the private repo (local, nothing committed on it).
 
-Facts found while writing the loader, not yet in a decision record:
-- ELA sub-items are not separate records. No ELA identifier has a letter; 139 ELA records hold lettered lines inside `text_Standard`. The loader splits them into `sub_items`, keyed by record ID plus letter.
-- Five identifiers are malformed on the CDE site and are stored as written with `id_parsed=0`: RL.2..2 (5604), RL.2..3 (5605), ELD.PI.12a.Em/Ex/Br (7276, 7283, 7290; grade 4).
-- 30 of the 32 K–8 math standards that have sub-item records have no record of their own (3.NF.2, 4.NF.3).
+Done:
+- `python src/load.py` builds `data/build/standards.db` keyed by record ID: 734 math, 568 ELA, 771 ELD records, 480 ELA sub-items, and 2,346 edges (1,187 `next_grade` and 514 `next_level` structural; 645 `builds_towards` from Learning Commons). No edge is reviewed.
+- `python scripts/join_learning_commons.py` pairs CDE records with Learning Commons California items: math 734 of 734, ELA 544 of 568, ELD 771 of 771, and every ELA sub-item. Output is in `data/derived/`.
+- `python src/lookup.py <identifier>` prints what a standard builds on, with the source of each link.
+- 45 tests pass (`python -m unittest discover tests`).
+- The cross-check of CSV rows against scraped records (0011) was re-run on 2026-11-14 with the same counts.
+
+Facts found on 2026-11-14, not yet in a decision record:
+- ELA sub-items are not separate records. No ELA identifier has a letter; 139 ELA records hold lettered lines inside `text_Standard`. The loader splits them into `sub_items`, keyed by record ID plus letter. Learning Commons has each as its own item (L.5.1.b).
+- Seven identifiers are wrong on the CDE site and are listed with evidence in `data/curated/identifier_corrections.csv`, all `reviewed=0`: RL.2..2, RL.2..3, ELD.PI.12a.Em/Ex/Br (grade 4), ELD.PI.7.78.Em (the owner judged it a typo for 7.8), and the second Calculus.16.0 (record 4763), whose text is Learning Commons' 17.0. The loader keeps the identifier as written and reads the parts from the correction.
+- 24 ELA records are placeholders: their whole text is a note such as "(Begins in grade 2)" or "(Not applicable to literature)". `is_placeholder=1`; progressions skip them.
+- 30 of the 32 K–8 math standards that have sub-item records have no record of their own (3.NF.2, 4.NF.3). Learning Commons has all 30. They are not yet rows in the database; imported links to such a parent are attached to its sub-item records, with a note.
+- ELD lettering changes between grades (PI.6 in grade 3 is PI.6a and PI.6b in grade 4). Those `next_grade` edges link every record of the number and carry a note; 48 edges.
 - The ELA asterisk footnote is in `text_Footnote` on 13 records. In math the asterisk appears only in high school (216 records), where it marks modeling standards, so `has_asterisk` means different things by subject.
-- Two sub-item typos in ELA text: "c . Decode" in RF.2.3 and "d.Review" in SL.4.1.
-- The em dash (U+2014) occurs in 33 fields, as punctuation ("Number and Operations—Fractions"). It is not normalized (0012 left this open).
+- Two sub-item typos in ELA text: "c . Decode" in RF.2.3 and "d.Review" in SL.4.1. The loader reads them as items c and d.
+- The em dash (U+2014) occurs in 33 fields, as punctuation. It is not normalized (0012 left this open).
+- Git was converting line endings in the data files on Windows. `.gitattributes` now stores `data/raw/`, `data/curated/`, `data/derived/`, and `cacs_probe/` byte for byte.
 
-Learning Commons Knowledge Graph (docs.learningcommons.org; files downloaded 2026-11-14, read from the zip, not committed):
-- It has California math, ELA, and ELD frameworks. ELA codes match CDE identifiers directly for 542 of 568. Math codes carry the cluster letter and an HS prefix (3.NF.A.2, HSA-CED.A.1), so 1 of 497 matches as written. ELD codes have another shape and no proficiency level (ELD.4.I.C.12), so 0 of 771 match.
-- 757 `buildsTowards` links between Common Core math standards (Student Achievement Partners coherence map), 303 involving high school. 898 California math standards link to a Common Core standard, 891 at jaccard 1.0. No such links exist for ELA or ELD.
-- It has the parent standards CDE lacks (3.NF.A.2), the correct forms RL.2.2 and RL.2.3, and ELA sub-items as their own items (L.5.1.b).
-- Learning components cover 931 California math standards, and Common Core ELA for K–2 only.
+Learning Commons Knowledge Graph (docs.learningcommons.org; downloaded 2026-11-14 to a `learning_commons` folder beside the repos; not committed):
+- Its item codes are its own, not CDE identifiers. Math codes carry the cluster letter and an HS prefix (3.NF.A.2, HSA-CED.A.1), and California's own additions are written with a dot (HSF.LE.A.4.1). `cde_form()` in the join script rewrites them. High school standards are one item per course, as on the CDE site, plus one copy under no course.
+- Its ELD codes have no letter and no proficiency level (ELD.4.I.C.12), so several CDE records share one item.
+- Math text agrees for 512 of 734 records and one text contains the other for 173; 49 differ and are marked in `learning_commons_map.csv`. CDE repeats the parent sentence before a sub-item, and one side or the other omits the worked examples.
+- 757 `buildsTowards` links (Student Achievement Partners coherence map, CC0) join Common Core math standards. 453 are imported as 645 record-to-record edges. 292 involve high school and are not imported; they are listed in `learning_commons_edges_unresolved.csv`.
+- It has no prerequisite links for ELA or ELD. Learning components cover 931 California math standards, and Common Core ELA for K–2 only.
+- Each ELD item has a `notes` field listing ELA identifiers ("W.4.4–5; SL.4.4, 6; L.4.1, 3, 5–6"). This looks like the correspondence column of the published CA ELD Standards. Seen on five items; not parsed or checked.
+- Its 284 `relatesTo` links (non-directional) are not imported.
 
-Next: a script that joins CDE record IDs to Learning Commons items and writes a mapping file, listing what does not match. Then structural edges for ELA and ELD, imported math prerequisite edges, and a command-line lookup for ELA and K–8 math.
+Next: decide the high school math pairing rule. Add the 30 missing K–8 parent standards as rows sourced from Learning Commons. Examine the ELD `notes` field as a source of ELD-to-ELA bridge edges. Then learning components as concept tags.
 
 Open questions:
-- Whether the mapping file and imported edges are committed here or rebuilt on each machine from the Learning Commons download.
-- Whether the math code mapping (drop the cluster letter and HS prefix) is unambiguous for every record, and what the 26 unmatched ELA identifiers have in common (not checked).
+- How to pair course copies for high school math links: a link from A-CED.1 to another standard could mean every course copy, the same course only, or the same pathway (Algebra I/Geometry/Algebra II versus Math I/II/III).
+- Whether an imported link to a parent standard should attach to every sub-item record, as now, or to a parent row once those exist.
+- The 49 math records whose text differs from the paired Learning Commons item have not been read one by one.
 - Whether `cacs_probe/` stays in the repo; it holds scraper test output and one saved CDE results page.
+- GitHub still serves the commit that held `ccssmgraph.pdf` (20bc256) to anyone with its ID; only GitHub Support can remove it.
 - What the search-all download's Main Category corresponds to (not checked).
 - Whether to commit the fetched HTML pages next to each records file. (0011)
 - Whether `query=a` on `/cacs/all` matches every standard in subjects other than ELA.
-- ELD-to-ELA bridge edges: Learning Commons has none, and `/cacs/eld` has no Part III. The published CA ELD Standards document is the first place to check; it is believed, not checked, to have ELD-to-ELA correspondence tables.
+- `/cacs/eld` has no Part III; whether one exists in a usable form is not checked.
 - Availability and licensing of Dynamic Learning Maps and Core Content Connectors (not checked).
 - How end users on macOS will get the tool: installing Python and running the setup script, a packaged app, or a hosted web page. The setup scripts are for development and assume comfort with a terminal.
-- Whether Python 3.13 (Debian 13's version) is acceptable on the laptop, or 3.14 should be installed there.
+- Whether Python 3.13 (Debian 13's version) is acceptable on the laptop, or 3.14 should be installed there. The loader, join script, and lookup use only the standard library; `tomllib` needs 3.11 or later.
