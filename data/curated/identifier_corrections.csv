@@ -1,0 +1,8 @@
+record_id,identifier,corrected_identifier,evidence,source,reviewed
+5604,RL.2..2,RL.2.2,Learning Commons item RL.2.2 (California ELA) has the same text as this record.,learning_commons,0
+5605,RL.2..3,RL.2.3,Learning Commons item RL.2.3 (California ELA) has the same text as this record.,learning_commons,0
+7276,ELD.PI.12a.Em,ELD.PI.4.12a.Em,"The identifier has no grade. The record's Grade field is 4, and grade 4 has no other 12a at this level.",cde_grade_field,0
+7283,ELD.PI.12a.Ex,ELD.PI.4.12a.Ex,"The identifier has no grade. The record's Grade field is 4, and grade 4 has no other 12a at this level.",cde_grade_field,0
+7290,ELD.PI.12a.Br,ELD.PI.4.12a.Br,"The identifier has no grade. The record's Grade field is 4, and grade 4 has no other 12a at this level.",cde_grade_field,0
+7480,ELD.PI.7.78.Em,ELD.PI.7.8.Em,"The Expanding and Bridging records for this standard are ELD.PI.7.8.Ex (7486) and ELD.PI.7.8.Br (7492); grade 7 has no other ELD.PI.7.8.Em. Owner judged it a CDE typo, 2026-11-14.",owner,0
+4763,Calculus.16.0,Calculus.17.0,CDE lists Calculus.16.0 twice with different text. Learning Commons item 17.0 (California Calculus) has the same text as this record; record 4762 matches its 16.0.,learning_commons,0

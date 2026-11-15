@@ -1,0 +1,10 @@
+{
+  "nodes.jsonl": {
+    "bytes": 366653539,
+    "sha256": "8ae4e62a17659116eebaf40d12d9f28d46be1487dfe357bd42a6c77368ed71f0"
+  },
+  "relationships.jsonl": {
+    "bytes": 626221536
+  },
+  "note": "Learning Commons Knowledge Graph, open-knowledge-graph export. Provided by Learning Commons under CC BY 4.0; standards data from the publishers named in each item's attributionStatement. Learning progressions (builds-towards links) are provided under CC0 from Student Achievement Partners."
+}

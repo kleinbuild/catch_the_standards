@@ -52,6 +52,10 @@ CREATE TABLE standards (
 
     identifier           TEXT NOT NULL,   -- exactly as CDE writes it
     identifier_norm      TEXT NOT NULL,   -- en dashes as hyphens, nothing else changed (0012)
+    -- Filled only for the few identifiers CDE got wrong, from
+    -- data/curated/identifier_corrections.csv. The id_ parts below are then
+    -- read from this instead of identifier_norm.
+    identifier_corrected TEXT,
 
     grade_label          TEXT NOT NULL,   -- as written: K, 5, 9–10
     grade_min            INTEGER NOT NULL CHECK (grade_min BETWEEN 0 AND 12),   -- 0 = TK & K (0004)
@@ -77,7 +81,7 @@ CREATE TABLE standards (
     -- search typed on a keyboard finds both ways CDE writes subtraction (0012).
     text_search          TEXT NOT NULL,
 
-    -- Parts read from identifier_norm (0005). All NULL when id_parsed = 0.
+    -- Parts read from the identifier (0005). All NULL when id_parsed = 0.
     id_parsed            INTEGER NOT NULL CHECK (id_parsed IN (0, 1)),
     id_strand            TEXT,            -- ELA strand (L), math domain (NF, A-CED, Calculus), ELD part (PI)
     id_grade             TEXT,            -- K, 5, 9-10. NULL for high school math, which has no grade in it.
@@ -89,6 +93,9 @@ CREATE TABLE standards (
     -- Facts about the text, not interpretations.
     ca_marker            INTEGER NOT NULL CHECK (ca_marker IN (0, 1)),      -- the word "CA" appears in text_standard
     has_asterisk         INTEGER NOT NULL CHECK (has_asterisk IN (0, 1)),   -- "*" appears in text_standard
+    -- The whole text is a bracketed note such as "(Begins in grade 2)": CDE
+    -- lists the identifier but there is no standard at this grade.
+    is_placeholder       INTEGER NOT NULL CHECK (is_placeholder IN (0, 1)),
 
     source_file          TEXT NOT NULL,
     source_page          INTEGER NOT NULL  -- results page the scraper read the record from
@@ -108,3 +115,34 @@ CREATE TABLE sub_items (
     has_asterisk  INTEGER NOT NULL CHECK (has_asterisk IN (0, 1)),
     PRIMARY KEY (record_id, letter)
 ) STRICT;
+
+-- Corrections to identifiers CDE published wrongly, with the evidence for each.
+CREATE TABLE identifier_corrections (
+    record_id             INTEGER PRIMARY KEY REFERENCES standards (record_id),
+    identifier            TEXT NOT NULL,   -- as CDE writes it
+    corrected_identifier  TEXT NOT NULL,
+    evidence              TEXT NOT NULL,
+    source                TEXT NOT NULL,
+    reviewed              INTEGER NOT NULL CHECK (reviewed IN (0, 1))
+) STRICT;
+
+-- Directed links between records (0006). from_record_id comes earlier: it is
+-- the lower grade, the lower proficiency level, or the standard that builds
+-- towards the other.
+--   type            source             made by
+--   next_grade      structural         the loader: same strand and number, next grade (ELA, ELD)
+--   next_level      structural         the loader: ELD Emerging -> Expanding -> Bridging
+--   builds_towards  learning_commons   data/derived/learning_commons_edges.csv
+-- reviewed is 1 only where the owner has confirmed the link.
+CREATE TABLE edges (
+    from_record_id  INTEGER NOT NULL REFERENCES standards (record_id),
+    to_record_id    INTEGER NOT NULL REFERENCES standards (record_id),
+    type            TEXT NOT NULL,
+    source          TEXT NOT NULL,
+    note            TEXT,
+    reviewed        INTEGER NOT NULL CHECK (reviewed IN (0, 1)),
+    PRIMARY KEY (from_record_id, to_record_id, type, source),
+    CHECK (from_record_id <> to_record_id)
+) STRICT;
+
+CREATE INDEX idx_edges_to ON edges (to_record_id);

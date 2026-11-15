@@ -1,0 +1,305 @@
+lc_from_code,lc_to_code,from_problem,to_problem,lc_relationship_id
+1.MD.B.3,2.MD.C.7,,no California item rated the same (jaccard 1.0),afe0f26d-274e-531a-87d6-7d7facd82475
+4.MD.C.5,HSG-CO.A.1,,"high school: one record per course, pairing undecided",c422a619-737e-592d-a603-acce597f8344
+6.EE.A.2,HSA-SSE.A.1,,"high school: one record per course, pairing undecided",44a17f20-ba60-5ce2-8706-37d787e716cb
+6.EE.B.5,HSA-REI.A.1,,"high school: one record per course, pairing undecided",8f05dd32-570b-5289-a908-50546fabe408
+6.EE.B.5,HSA-REI.D.10,,"high school: one record per course, pairing undecided",20e379a7-1146-5505-a528-106c429549e3
+6.G.A.1,HSG-MG.A.1,,"high school: one record per course, pairing undecided",c646adb3-c4f1-55f6-9a8b-7cf9cf672bbe
+6.G.A.1,HSG-SRT.D.9,,"high school: one record per course, pairing undecided",920d8b7e-0a3a-5000-a085-19b8fe93caac
+6.RP.A.3,HSN-Q.A.1,,"high school: one record per course, pairing undecided",7725eb0b-e645-5bae-906b-15ef86dcdd03
+6.SP.A.2,HSS-ID.A.2,,"high school: one record per course, pairing undecided",7e670e92-ab5c-54f2-a3ef-dd92b0d278ec
+6.SP.A.2,HSS-ID.A.3,,"high school: one record per course, pairing undecided",d240a4e4-51aa-5c40-8c47-837e5c5b4831
+6.SP.A.2,HSS-ID.A.4,,"high school: one record per course, pairing undecided",66601a51-f603-5a3a-ae10-1e3e26b09989
+6.SP.A.3,HSS-ID.A.2,,"high school: one record per course, pairing undecided",9da2c130-ebbd-5e47-b548-a45708ca89cb
+6.SP.B.4,HSS-ID.A.1,,"high school: one record per course, pairing undecided",4bcda05e-07ad-5484-8e7c-dae2dd3fa013
+6.SP.B.5,HSS-IC.B.6,,"high school: one record per course, pairing undecided",5b609fa3-1de1-5740-91d8-a8c49425565b
+6.SP.B.5,HSS-ID.A.2,,"high school: one record per course, pairing undecided",6d59bad5-a476-50c7-aa53-156b6d050eed
+6.SP.B.5,HSS-ID.A.3,,"high school: one record per course, pairing undecided",6603d2dc-f7d5-5e49-b9e5-86e620532034
+7.EE.A.1,HSA-APR.A.1,,"high school: one record per course, pairing undecided",439a8faf-4c5b-532e-abbb-413e7c7366c2
+7.EE.A.1,HSA-SSE.A.2,,"high school: one record per course, pairing undecided",7c8d84c4-f1ca-562b-801f-f439768deae4
+7.EE.A.1,HSA-SSE.B.3.a,,"high school: one record per course, pairing undecided",392b3da7-5d55-5b53-87ab-eee4fe5506cc
+7.EE.A.1,HSA-SSE.B.3.b,,"high school: one record per course, pairing undecided",5bc25d95-54da-5236-bcd3-aff74e0325b9
+7.EE.A.1,HSF-IF.C.8.a,,"high school: one record per course, pairing undecided",0604c722-83ee-5320-aa02-9540b70e5c1d
+7.EE.A.1,HSF-IF.C.8.b,,"high school: one record per course, pairing undecided",f7aaaf18-5ea8-5d23-a91e-65fdfcaa59a4
+7.EE.A.1,HSN-CN.A.2,,"high school: one record per course, pairing undecided",1b77eb49-472e-55d3-8a70-abce9931d0e9
+7.EE.A.2,HSA-SSE.A.1,,"high school: one record per course, pairing undecided",667b60c0-b97e-5e6a-bc83-5c67332eafe2
+7.EE.A.2,HSA-SSE.B.3.a,,"high school: one record per course, pairing undecided",f7bac461-bba6-5935-9b26-4732253b4902
+7.EE.A.2,HSA-SSE.B.3.b,,"high school: one record per course, pairing undecided",ddbf7909-c459-50c8-81a2-281a3baca867
+7.EE.A.2,HSA-SSE.B.3.c,,"high school: one record per course, pairing undecided",4247030a-7543-5cfc-bc87-fd624aaf4784
+7.EE.B.4,HSA-CED.A.1,,"high school: one record per course, pairing undecided",7602e59a-62f7-542a-9838-901aecfc7c54
+7.EE.B.4,HSA-REI.D.12,,"high school: one record per course, pairing undecided",10388e92-b9bf-583e-b9e6-c54292162336
+7.G.A.1,HSG-MG.A.3,,"high school: one record per course, pairing undecided",9ace6d3f-927a-5539-8832-5cf9e141c7dc
+7.G.A.2,HSG-CO.B.8,,"high school: one record per course, pairing undecided",3877ebc9-c2ac-5ed6-9e05-3f2eab2560bc
+7.G.A.2,HSG-CO.D.12,,"high school: one record per course, pairing undecided",ef2acc54-872b-5708-ae6f-de83f0a6f440
+7.G.A.3,HSG-GMD.B.4,,"high school: one record per course, pairing undecided",cbb77074-6347-5073-b4c6-7372c2b9d780
+7.G.B.4,HSG-C.B.5,,"high school: one record per course, pairing undecided",abca8bf2-a273-5846-b99b-c929e29afd6c
+7.G.B.4,HSG-GMD.A.1,,"high school: one record per course, pairing undecided",b01bfc2b-0235-538c-9723-184646859957
+7.G.B.4,HSG-MG.A.1,,"high school: one record per course, pairing undecided",cc2dd5ad-5f76-51a6-92df-509bd7448430
+7.G.B.4,HSG-MG.A.3,,"high school: one record per course, pairing undecided",07c7827a-ddf6-5271-886d-1d62ce63f6f7
+7.G.B.5,HSG-CO.C.9,,"high school: one record per course, pairing undecided",3a59885c-8913-5119-b081-0d9420dd413d
+7.G.B.6,HSG-MG.A.1,,"high school: one record per course, pairing undecided",ab6e58c3-f363-5867-8ce4-0bc00b35afbf
+7.G.B.6,HSG-MG.A.3,,"high school: one record per course, pairing undecided",28f480cf-113c-5b85-85ad-0abfd98f7342
+7.NS.A.2,HSA-APR.D.7,,"high school: one record per course, pairing undecided",b223899f-b60a-5179-9bf8-aaab9570bfb0
+7.RP.A.1,HSG-MG.A.2,,"high school: one record per course, pairing undecided",d7fb521f-1224-5be2-a398-080c13296cb3
+7.RP.A.1,HSN-Q.A.1,,"high school: one record per course, pairing undecided",f5754a95-a764-5c6c-837b-5f5755cd7f98
+7.RP.A.2,HSG-C.B.5,,"high school: one record per course, pairing undecided",4c63c621-9721-5bdb-8577-f9440d4d4e47
+7.RP.A.2,HSG-SRT.C.6,,"high school: one record per course, pairing undecided",ecf812ee-08b7-540b-a50f-aee44f9d65e6
+7.RP.A.3,HSA-SSE.B.3.c,,"high school: one record per course, pairing undecided",500fb7d8-99ed-58bf-8142-53ff3e95d9fc
+7.RP.A.3,HSF-IF.C.8.b,,"high school: one record per course, pairing undecided",3ad3dd6c-cad9-5ed6-b1da-1775121dcdf7
+7.SP.A.1,HSS-IC.A.1,,"high school: one record per course, pairing undecided",c5891073-9a7a-508b-bb88-ba96ed2fe68e
+7.SP.A.1,HSS-IC.B.3,,"high school: one record per course, pairing undecided",741b99e7-6a29-5070-9137-acd5eadb8373
+7.SP.A.2,HSS-IC.B.4,,"high school: one record per course, pairing undecided",4fa72b49-ab79-5983-ba5e-0273d498e39b
+7.SP.B.3,HSS-ID.A.2,,"high school: one record per course, pairing undecided",882f0ea5-bbe3-582c-a231-c640eb2a38f7
+7.SP.B.4,HSS-IC.B.5,,"high school: one record per course, pairing undecided",058d92f6-3f08-5e86-a967-30cea2ff2b82
+7.SP.B.4,HSS-ID.A.2,,"high school: one record per course, pairing undecided",202c1916-8dac-586e-800d-0b1b2a72c85a
+7.SP.C.7,HSS-IC.A.2,,"high school: one record per course, pairing undecided",341e836d-ea6f-55eb-a2fb-06bbfcabee85
+7.SP.C.8,HSS-CP.A.1,,"high school: one record per course, pairing undecided",b40e742f-64dd-52c6-a4ee-b2987f111dad
+7.SP.C.8,HSS-CP.A.2,,"high school: one record per course, pairing undecided",721845de-1519-58d9-9490-c6a73f9d74fb
+7.SP.C.8,HSS-CP.B.6,,"high school: one record per course, pairing undecided",2a661248-1f2f-51e4-8303-f68c51bcfeb2
+8.EE.A.1,HSA-APR.A.1,,"high school: one record per course, pairing undecided",a6a9f3ce-2523-5d00-ac67-cdd9b0a22e43
+8.EE.A.1,HSF-BF.B.5,,the California item has no CDE record,3258882a-ea94-5f75-a256-528e4ff1417d
+8.EE.A.1,HSN-RN.A.1,,"high school: one record per course, pairing undecided",a264f0af-19eb-532f-8498-dda3ed72195b
+8.EE.A.2,HSA-CED.A.1,,"high school: one record per course, pairing undecided",b0983a96-54ae-571d-9887-b46a66545d8f
+8.EE.A.2,HSA-REI.B.4.a,,"high school: one record per course, pairing undecided",6851fc4b-ca13-54bd-bacd-624c5a6bb1e4
+8.EE.A.2,HSA-REI.B.4.b,,"high school: one record per course, pairing undecided",79a0f533-47fe-512e-b4ee-e2ec44aec8ad
+8.EE.A.2,HSN-RN.A.1,,"high school: one record per course, pairing undecided",2f3a2586-aa42-5961-afe2-12456e6d7c4d
+8.EE.A.4,HSN-Q.A.1,,"high school: one record per course, pairing undecided",650493b9-3c8e-59ae-863c-941dda0a28f8
+8.EE.B.5,HSA-REI.D.10,,"high school: one record per course, pairing undecided",c5bae495-ad2c-515e-9c28-28a4d339b77f
+8.EE.B.6,HSA-REI.D.10,,"high school: one record per course, pairing undecided",1c68d6c5-8703-558e-b4c5-f7da1a3a28af
+8.EE.B.6,HSG-GPE.B.5,,"high school: one record per course, pairing undecided",f75806f2-53de-56fb-af96-a82b23e880fe
+8.EE.C.7,HSA-CED.A.4,,"high school: one record per course, pairing undecided",93d6c349-b9d8-5486-90de-8e319c11028d
+8.EE.C.7,HSA-REI.A.1,,"high school: one record per course, pairing undecided",e49f6eb9-54d3-5647-9d6e-7e37a68c56c8
+8.EE.C.7,HSA-REI.B.3,,"high school: one record per course, pairing undecided",ffa5acca-f537-5fdf-9a2f-fa228683821f
+8.EE.C.8,HSA-CED.A.2,,"high school: one record per course, pairing undecided",bc95fd70-eb5c-5282-8521-7ad899eb3aca
+8.EE.C.8,HSA-CED.A.3,,"high school: one record per course, pairing undecided",e292dc23-dedd-59ec-b23e-5e0bbb04ea03
+8.EE.C.8,HSA-REI.C.5,,"high school: one record per course, pairing undecided",deb6dc0a-f892-5f89-b4c0-f56d6f2d948a
+8.EE.C.8,HSA-REI.C.6,,"high school: one record per course, pairing undecided",c43bc15a-c7fc-508d-8eee-c076beeef5d0
+8.EE.C.8,HSA-REI.C.7,,"high school: one record per course, pairing undecided",5a5734e6-b77e-56e4-b6cb-25d9b55aea86
+8.EE.C.8,HSA-REI.D.10,,"high school: one record per course, pairing undecided",8c153879-5dff-5c0f-afb8-24d9c37a8f5e
+8.EE.C.8,HSA-REI.D.12,,"high school: one record per course, pairing undecided",e8bd1ab4-b2bd-522e-a772-a0394a4ba5d1
+8.EE.C.8,HSG-GPE.B.5,,"high school: one record per course, pairing undecided",da9de2a3-83e4-5222-8fdb-3c284d13a60d
+8.F.A.1,HSF-IF.A.1,,"high school: one record per course, pairing undecided",4b1f8552-bc74-57f3-b098-c6baf2b56fcd
+8.F.A.1,HSG-CO.A.2,,"high school: one record per course, pairing undecided",faecc2da-61cc-5af2-9a5b-22cdd2ce291d
+8.F.A.2,HSF-IF.C.9,,"high school: one record per course, pairing undecided",b0bca24a-2586-51a1-88cf-526d855a3080
+8.F.A.3,HSF-LE.A.1,,"high school: one record per course, pairing undecided",e38c6e36-e3cf-5bb0-8456-2e1ef3786387
+8.F.B.4,HSA-CED.A.2,,"high school: one record per course, pairing undecided",e6a7c2f6-0a2a-5462-83df-dd9dbcbc948a
+8.F.B.4,HSF-BF.A.1.a,,"high school: one record per course, pairing undecided",4e2e2321-9093-5b04-a11d-493b7ce820e0
+8.F.B.4,HSF-BF.A.2,,"high school: one record per course, pairing undecided",8072f1e9-b48a-5c0e-928e-a0d79c461316
+8.F.B.4,HSF-IF.B.6,,"high school: one record per course, pairing undecided",ede2a4c6-de40-5e89-8994-9750fee637a4
+8.F.B.4,HSF-LE.A.1,,"high school: one record per course, pairing undecided",76970148-a59e-5a42-a51a-635c4e3dc45a
+8.F.B.4,HSF-LE.A.2,,"high school: one record per course, pairing undecided",d1a85c57-283b-5d34-bb5f-d39aaca4fda6
+8.F.B.4,HSF-LE.B.5,,"high school: one record per course, pairing undecided",efc69d86-9cd0-5587-a868-b89030d35ef0
+8.F.B.4,HSS-ID.C.7,,"high school: one record per course, pairing undecided",4d0178ba-e779-5a60-a967-985c0a012d65
+8.F.B.5,HSF-IF.B.4,,"high school: one record per course, pairing undecided",0c889534-26e0-59bf-beb0-ab5a186a5078
+8.F.B.5,HSF-LE.A.1,,"high school: one record per course, pairing undecided",02792683-b564-5edf-ae55-55a3edef7e70
+8.F.B.5,HSF-LE.A.3,,"high school: one record per course, pairing undecided",ecfc3245-b3fa-59c0-9be6-1e6cad428ec7
+8.G.A.1,HSG-CO.A.2,,"high school: one record per course, pairing undecided",04c90148-6109-55ae-835f-b579d1fbc22e
+8.G.A.1,HSG-CO.A.4,,"high school: one record per course, pairing undecided",b51ae7a5-3a3b-5349-847b-bc83ee61afa3
+8.G.A.2,HSG-CO.A.5,,"high school: one record per course, pairing undecided",a48269b2-89ac-51f4-8f3c-dad88bcab034
+8.G.A.2,HSG-CO.B.6,,"high school: one record per course, pairing undecided",0b737c03-b0d9-5f9b-b19c-729390f9db2e
+8.G.A.3,HSG-CO.A.5,,"high school: one record per course, pairing undecided",29468321-0eb8-5a47-9a7a-79d9e3bee6bd
+8.G.A.3,HSG-SRT.A.1,,"high school: one record per course, pairing undecided",6b268c86-ce41-5b49-9843-7caf0c76ba0a
+8.G.A.4,HSG-SRT.A.2,,"high school: one record per course, pairing undecided",a6d4b98e-f10c-52a7-a157-43dcaecc245a
+8.G.A.5,HSG-CO.C.10,,"high school: one record per course, pairing undecided",1cc0b644-35a2-5a99-9e8f-a60afadfb659
+8.G.A.5,HSG-CO.C.9,,"high school: one record per course, pairing undecided",7ad9e85a-a22c-501a-a92d-bf47511d47c8
+8.G.A.5,HSG-SRT.A.3,,"high school: one record per course, pairing undecided",7319a488-7c16-599a-b39c-17ac80c7309b
+8.G.B.6,HSG-SRT.B.4,,"high school: one record per course, pairing undecided",157912a7-563a-587a-91bd-5fc1d16a018c
+8.G.B.7,HSF-TF.A.3,,the California item has no CDE record,583308db-0670-5d6a-a2d1-d65284962d3f
+8.G.B.7,HSF-TF.C.8,,"high school: one record per course, pairing undecided",b9e553df-444e-5e84-b7af-7120e9129112
+8.G.B.7,HSG-SRT.C.8,,"high school: one record per course, pairing undecided",2518ffa8-00b0-52da-9602-3c496b161861
+8.G.B.8,HSG-GPE.A.1,,"high school: one record per course, pairing undecided",c2f26d9b-1ca3-5ef5-8b45-82f9723332fc
+8.G.B.8,HSG-GPE.A.2,,"high school: one record per course, pairing undecided",2bb0efb9-fe69-5ddf-a1d7-83e960998b8e
+8.G.B.8,HSG-GPE.A.3,,the California item has no CDE record,0b80abb6-44ae-55f3-8a1e-5437eff130ee
+8.G.B.8,HSG-GPE.B.4,,"high school: one record per course, pairing undecided",7c4cf59a-d0f5-5280-8910-ec0a48400d24
+8.G.B.8,HSG-GPE.B.7,,"high school: one record per course, pairing undecided",6763799e-763d-5027-af16-bb0a26371611
+8.G.C.9,HSG-GMD.A.1,,"high school: one record per course, pairing undecided",dd322a59-a1ac-5493-a962-9eac52ef4e79
+8.G.C.9,HSG-GMD.A.2,,the California item has no CDE record,13009465-4ccd-59ce-922f-b4cf7674669b
+8.G.C.9,HSG-GMD.A.3,,"high school: one record per course, pairing undecided",1fbf3e3d-d267-5908-bee7-53d6d117bc93
+8.G.C.9,HSG-MG.A.1,,"high school: one record per course, pairing undecided",340dd88d-1d16-533e-b1c3-455a741973c3
+8.G.C.9,HSG-MG.A.3,,"high school: one record per course, pairing undecided",606d829a-58b6-5a01-8b4a-46f009d91c90
+8.NS.A.1,HSN-RN.B.3,,"high school: one record per course, pairing undecided",898c339c-f46d-5484-9a13-70e1444e3592
+8.SP.A.1,HSS-ID.B.6.c,,"high school: one record per course, pairing undecided",baf5da50-505d-5412-9e69-926bddce3d83
+8.SP.A.1,HSS-ID.C.9,,"high school: one record per course, pairing undecided",6f4c3f31-6349-5252-b97a-8fc3b07dc84e
+8.SP.A.2,HSS-ID.B.6.b,,"high school: one record per course, pairing undecided",b8244736-8408-5519-adb8-2c78a0ddabd5
+8.SP.A.2,HSS-ID.B.6.c,,"high school: one record per course, pairing undecided",5d3c3c59-071c-5f3b-a8d2-279a8d1c416c
+8.SP.A.2,HSS-ID.C.8,,"high school: one record per course, pairing undecided",cc93309f-4076-5305-9673-eece0dde2f1d
+8.SP.A.3,HSS-ID.C.7,,"high school: one record per course, pairing undecided",a5ed4afb-b11b-5bff-a178-7beb636cae0e
+8.SP.A.4,HSS-CP.A.4,,"high school: one record per course, pairing undecided",e571bd5c-65d4-5a0f-a8f0-073e089b4c9e
+8.SP.A.4,HSS-ID.B.5,,"high school: one record per course, pairing undecided",85357053-5391-54e2-94cf-a45e378dfeec
+8.SP.A.4,HSS-ID.C.9,,"high school: one record per course, pairing undecided",df136f52-dcdc-566e-9fd4-3b3c9d55d7d1
+HSA-APR.A.1,HSA-APR.D.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",7fc76629-e9e9-5e8f-9783-6a68a2aaa701
+HSA-APR.A.1,HSA-SSE.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",6c8b9273-5816-55dd-9172-e1f3556c8ce1
+HSA-APR.B.2,HSA-APR.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",fd836cbf-c96a-5bc3-88ed-e56560b7a64f
+HSA-APR.B.2,HSN-CN.C.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",8e603768-f5d1-5f74-bc7a-e69bdbe0d780
+HSA-APR.D.6,HSA-APR.B.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",57c9d7eb-ef6c-5249-9843-553cdea655ae
+HSA-APR.D.6,HSA-SSE.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",8cc99edc-dc3f-55a0-879a-0998acd404d8
+HSA-REI.A.1,HSA-REI.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",830b9735-d377-58ee-bd67-3d9250e468e9
+HSA-REI.A.1,HSA-REI.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",065a9cad-fa06-53df-8e61-499e5599d235
+HSA-REI.A.1,HSA-REI.B.4.a,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",512d5403-ee7a-54bc-90ec-cf8134c3b551
+HSA-REI.A.1,HSA-REI.B.4.b,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",18043749-2dc1-5d25-8013-04e1701cbb54
+HSA-REI.A.2,HSF-BF.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",87486b2d-31cd-5cea-82b2-fa000426aa18
+HSA-REI.B.3,HSA-CED.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",4038c4db-d295-5157-b7c4-7b7daaa86c55
+HSA-REI.B.3,HSA-CED.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",a60c862e-8303-536b-aa4a-c9c94a711ab0
+HSA-REI.B.3,HSF-BF.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",c39cc65b-f6f3-5e27-b85a-3849362e2dce
+HSA-REI.B.4.a,HSA-REI.B.4.b,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",ee88598c-4318-59e4-813d-0dee9bf7d7e6
+HSA-REI.B.4.a,HSG-GPE.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",87b4decd-3381-5bee-8587-4f4c01581bf8
+HSA-REI.B.4.b,HSA-CED.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",4789c543-0a25-5068-b159-e5f35bf53825
+HSA-REI.B.4.b,HSA-REI.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",e0a1621b-043b-5455-9984-604afdd3bfce
+HSA-REI.B.4.b,HSA-SSE.B.3.a,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",81fc32f8-de48-5c57-ad67-c8fb13fe52b8
+HSA-REI.B.4.b,HSN-CN.C.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",c1709afa-18da-5882-8af1-00f42b2a9669
+HSA-REI.C.5,HSA-REI.C.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",140163b5-56cc-5859-9018-d1d7aaf6f903
+HSA-REI.C.6,HSA-CED.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",d088ae77-8a44-5f02-b087-ab114c8f2bc4
+HSA-REI.C.6,HSA-REI.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",02ed0c4b-1600-5554-9217-a9df15095eca
+HSA-REI.C.6,HSA-REI.D.12,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",3d9c0058-d05e-5d40-b216-684ff2ca22f9
+HSA-REI.D.10,HSA-CED.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",c565fffc-6fa7-5520-9604-6fe3c45087d0
+HSA-REI.D.10,HSA-REI.C.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",56189fb6-df1f-58e6-8fb0-5152b08032b0
+HSA-REI.D.10,HSA-REI.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",4818e6a7-1238-5e63-b62b-4dc09b6ed5c7
+HSA-REI.D.10,HSA-REI.D.11,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",da9c0606-ea8d-54ba-bda7-cacef6fa76ec
+HSA-REI.D.10,HSA-REI.D.12,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",1bde7283-1147-528f-8914-45dfdcce623f
+HSA-REI.D.10,HSG-GPE.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",38552ab1-22bb-5885-84b1-1d4288340672
+HSA-REI.D.10,HSG-GPE.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",c2e33f69-40b0-5f99-8532-a658967566ea
+HSA-REI.D.10,HSG-GPE.A.3,"high school: one record per course, pairing undecided",the California item has no CDE record,1f09c5da-64f7-57d3-88de-4e036c6415a7
+HSA-REI.D.12,HSA-CED.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",0eba507a-9a75-59dc-96f7-c311e008ca85
+HSA-SSE.A.1,HSA-CED.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",e9d96cb1-5215-5374-a93d-a09a37d4fb34
+HSA-SSE.A.1,HSA-CED.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",41415877-ec8d-58b2-8531-f716ee38afe5
+HSA-SSE.A.1,HSA-CED.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",9dd4fbb4-44c9-56e7-b4d8-a5568f176bbb
+HSA-SSE.A.1,HSA-CED.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",387d028a-ae56-53ff-a9f7-b26431401ca8
+HSA-SSE.A.1,HSF-LE.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",6d1d66e2-716b-5893-9f95-a59e4731c06c
+HSA-SSE.A.2,HSA-APR.C.4,"high school: one record per course, pairing undecided",no California item rated the same (jaccard 1.0),141502ce-dd1c-5f56-b5dd-d25bbdbc91a8
+HSA-SSE.A.2,HSA-APR.C.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",44c5674e-b036-5a78-8c4d-cd66d97463cc
+HSA-SSE.A.2,HSA-APR.D.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",142708f0-fd49-5a1f-83a5-532ce50198d4
+HSA-SSE.A.2,HSA-APR.D.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",9841f43f-810a-5813-8fe3-3c7b279a6495
+HSA-SSE.A.2,HSA-SSE.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",1d83f378-329d-5d32-bc18-437039ae94bf
+HSA-SSE.A.2,HSN-CN.C.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",e7afe03e-e34c-5b82-acd7-8110bfc1a7e0
+HSA-SSE.B.3.a,HSA-APR.B.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",70cb4df7-7215-57a0-8b54-5fbba0bd3cd0
+HSF-BF.A.1.a,HSF-BF.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",8f5466c1-c73b-54df-be6d-6f5424f4670c
+HSF-BF.A.1.b,HSF-BF.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",cf5e2697-8471-54eb-a7e9-06920cbeb5f7
+HSF-BF.B.3,HSF-TF.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",ac452a20-f197-5264-88d1-529653aca113
+HSF-BF.B.4,HSF-BF.B.5,"high school: one record per course, pairing undecided",the California item has no CDE record,543ccf6a-289a-5f01-a721-ffccf11ad978
+HSF-IF.A.1,HSF-BF.A.1.a,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",336c75b3-ca6c-590d-9237-25573a5b79bf
+HSF-IF.A.1,HSF-BF.A.1.b,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",538ea249-d77a-5d18-be72-bcbef9aa519f
+HSF-IF.A.1,HSF-BF.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",c2c7f26e-a61b-50bd-a8bd-57c9a0fb1f47
+HSF-IF.A.1,HSF-IF.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",54948c8e-e78d-5e0a-9185-86be5951c215
+HSF-IF.A.1,HSF-IF.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",2944dd72-3e5a-54b3-8588-312c36498c0d
+HSF-IF.A.1,HSF-IF.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",e819c180-a43c-5fb4-ae81-a08098beb5c3
+HSF-IF.A.1,HSF-IF.C.7.a,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",5b71e682-c442-512e-ac7b-d941e719ed0d
+HSF-IF.A.1,HSF-IF.C.7.b,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",9dda0307-4c8d-520b-9a33-ef66d0d77f2f
+HSF-IF.A.1,HSF-IF.C.7.c,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",f45a3aba-a53c-5d06-905c-ddf41c6966c3
+HSF-IF.A.1,HSF-IF.C.7.d,"high school: one record per course, pairing undecided",the California item has no CDE record,ecb1a9d5-a020-5f1d-897e-4732e45b52fc
+HSF-IF.A.1,HSF-IF.C.7.e,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",f33c53b9-af1c-5ffc-84b5-3fd9335f5e6a
+HSF-IF.A.1,HSF-IF.C.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",573cf9e9-864a-5679-8857-f48bda2a9001
+HSF-IF.A.1,HSF-TF.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",9b10baa5-ea40-54c2-922e-cbf3878fdc17
+HSF-IF.A.1,HSG-CO.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",093d542f-08aa-5147-b0e5-100f6e7f1a21
+HSF-IF.A.2,HSF-BF.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",5254865a-7e4b-5162-bded-296ddc3e4d25
+HSF-IF.A.2,HSF-IF.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",92612af7-735f-5010-95fc-82433a39274f
+HSF-IF.A.2,HSG-CO.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",23dd6825-2047-569f-8de7-004204ed8b6a
+HSF-IF.A.3,HSF-BF.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",cca38a9a-1dd1-5896-a8f7-015556cc9271
+HSF-IF.B.4,HSF-TF.B.6,"high school: one record per course, pairing undecided",the California item has no CDE record,93e31a3e-af3b-5d0a-9a31-d48f4581248b
+HSF-IF.C.7.a,HSF-BF.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",cfb3454a-a939-5395-bc73-183d0bd1d188
+HSF-IF.C.7.b,HSF-BF.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",552fa59c-3aa9-549c-806e-54990fbed352
+HSF-IF.C.7.c,HSF-BF.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",ff9f285b-c3d3-5520-b932-a17a0cf80efb
+HSF-IF.C.7.d,HSF-BF.B.3,the California item has no CDE record,"high school: one record per course, pairing undecided",469f9f8e-32b4-5b91-92a3-a1a8d4769315
+HSF-IF.C.7.e,HSF-BF.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",2458c1f6-4225-539a-bd63-18e384b3d998
+HSF-IF.C.7.e,HSF-LE.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",232425d2-e802-5682-931f-8d7ca6bec5c8
+HSF-IF.C.7.e,HSF-TF.A.4,"high school: one record per course, pairing undecided",the California item has no CDE record,047e4c2b-b04f-5433-8cef-e1a8149a9d47
+HSF-IF.C.7.e,HSF-TF.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",fd9ead74-4f1f-586b-af47-9c521719a381
+HSF-IF.C.7.e,HSF-TF.B.6,"high school: one record per course, pairing undecided",the California item has no CDE record,0facf840-23f6-52e6-b2c2-baf360eaf9fb
+HSF-LE.A.1,HSF-LE.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",a9bc271f-b454-51f5-ac0e-040e3657fbca
+HSF-LE.A.4,HSA-CED.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",25fb3513-c754-5d02-a642-4892b25cb9f5
+HSF-TF.A.1,HSF-TF.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",b7e69d5a-cba3-5d07-bb51-23eb983af99c
+HSF-TF.A.2,HSF-TF.A.4,"high school: one record per course, pairing undecided",the California item has no CDE record,bc01f8f3-0758-5831-8cdd-0321a24cd8d0
+HSF-TF.A.2,HSF-TF.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",68f612a9-d984-576b-afcc-7e946e269544
+HSF-TF.A.2,HSF-TF.B.6,"high school: one record per course, pairing undecided",the California item has no CDE record,074804a9-0611-55cc-b5ca-8e35868f4462
+HSF-TF.A.2,HSF-TF.C.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",0a0e4015-7eb0-5f5b-b80f-b663cd53dc9f
+HSF-TF.A.2,HSF-TF.C.9,"high school: one record per course, pairing undecided",the California item has no CDE record,e0d76b6a-bfac-53f4-b961-8c1baf4d5acf
+HSF-TF.B.5,HSF-TF.B.7,"high school: one record per course, pairing undecided",the California item has no CDE record,de82516b-7da9-54ae-9a43-971136451e73
+HSF-TF.B.6,HSF-TF.B.7,the California item has no CDE record,the California item has no CDE record,79d06e8a-d71d-5483-be7c-f96135c02daa
+HSF-TF.C.9,HSN-CN.B.5,the California item has no CDE record,the California item has no CDE record,b754b17d-fe8b-5b4e-8392-4fe7f0029106
+HSG-C.A.2,HSG-C.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",045ff8ab-e51f-570c-bbd4-66066844b147
+HSG-C.B.5,HSF-TF.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",525cdbe2-b1b4-5ed8-bd21-df8b0026163a
+HSG-CO.A.1,HSF-TF.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",743deadb-4251-5b6a-bd78-7e0a697f6610
+HSG-CO.A.1,HSG-CO.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",917ace5d-49aa-567e-a134-8fae8911aa03
+HSG-CO.A.1,HSG-CO.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",1ab8c06e-817f-5857-91e4-e2bd3b834d73
+HSG-CO.A.2,HSG-CO.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",387c9056-7383-5a6a-ad24-64c9f917fc31
+HSG-CO.A.2,HSG-CO.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",3f78f8af-a0b0-52e1-a365-63d1f04c0458
+HSG-CO.A.4,HSG-CO.A.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",f7644814-751c-5b50-85ea-e80a83a1365b
+HSG-CO.A.5,HSG-CO.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",24701e61-c5fe-5bfd-8d89-f2506f6907dc
+HSG-CO.A.5,HSG-CO.B.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",741f81d7-b36c-5668-8c9f-08343bd9f490
+HSG-CO.B.6,HSG-CO.B.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",adaac9a9-d0c9-58f4-bd15-8c5adba4f01d
+HSG-CO.B.6,HSG-CO.B.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",0c52d4ef-ae34-5987-8442-9480955ed492
+HSG-CO.B.6,HSG-CO.C.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",7c39782e-4303-5a2c-aec6-3339c86b6e9f
+HSG-CO.B.7,HSG-CO.B.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",aae8dd9c-814f-5523-b2cf-4dc63b6a326c
+HSG-CO.B.8,HSG-CO.C.10,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",005fc27e-66b9-515a-affc-a143ad9f3f63
+HSG-CO.B.8,HSG-SRT.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",0fdcf881-cd31-59c8-92ab-48d428ae9a90
+HSG-CO.C.10,HSG-CO.C.11,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",4156b274-c9fb-523f-a3db-5f4b781fb539
+HSG-CO.C.10,HSG-SRT.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",2b73a07d-ed7b-5b3f-9e75-ce2e6df9130d
+HSG-CO.C.10,HSG-SRT.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",962cefe8-2230-5ac8-9e0b-87e508604a55
+HSG-CO.C.11,HSG-C.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",5f884bc0-b195-5a2f-9be6-ae0ae4ef74a3
+HSG-CO.C.9,HSG-C.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",753756d4-0493-5520-990d-c7c00c6641ee
+HSG-CO.C.9,HSG-C.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",868da737-18fe-5dcf-8a5f-505423074d14
+HSG-CO.C.9,HSG-CO.C.10,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",76128056-f425-5095-b418-8ff00d815841
+HSG-CO.C.9,HSG-CO.C.11,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",63bcef6b-da57-50e2-8b88-ffd3bd85501c
+HSG-CO.D.12,HSG-C.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",753e1c2b-9f69-5173-9a9b-52a41196cf2b
+HSG-CO.D.12,HSG-C.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",6f9b142a-6584-5f02-b9c6-989840e6b7af
+HSG-CO.D.12,HSG-CO.D.13,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",f2d397a5-b10e-5e05-b182-3f0c7a8d4b60
+HSG-CO.D.13,HSG-C.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",e847077f-d0d6-54c4-88c1-cd2034ab659c
+HSG-GMD.A.1,HSG-GMD.A.2,"high school: one record per course, pairing undecided",the California item has no CDE record,5da82bb1-d1c8-5f73-abe4-b8837adb33b0
+HSG-GMD.A.1,HSG-GMD.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",bc5ddcfd-5ef9-590c-be3c-acf074a67fe4
+HSG-GMD.B.4,HSG-GMD.A.2,"high school: one record per course, pairing undecided",the California item has no CDE record,2b96c6bd-3f4c-5d92-b2d8-a5feb15631bf
+HSG-GPE.A.1,HSA-REI.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",2a9b6f4a-9499-5075-94e6-905a000d6f13
+HSG-GPE.A.1,HSG-GPE.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",0a6594b8-285a-5ce7-868e-6a54e835ebc9
+HSG-SRT.A.1,HSG-CO.A.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",f79878a3-7f16-51d0-b340-6b016152fbc4
+HSG-SRT.A.1,HSG-SRT.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",490e8517-d9d0-59dc-9c4d-9db1ad4ccd96
+HSG-SRT.A.2,HSG-C.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",a8cafe49-6f61-540f-b7b9-8c931be7fd9f
+HSG-SRT.A.2,HSG-C.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",d112d850-370d-5ddb-97e0-5f031b75ccff
+HSG-SRT.A.2,HSG-SRT.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",d5a99426-ef0d-5d77-a7ab-d069ae2dcc5e
+HSG-SRT.A.3,HSG-SRT.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",4f5362df-6547-562f-8c0c-edec08dcd067
+HSG-SRT.A.3,HSG-SRT.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",ae4bdd86-ac4d-5fe0-b985-30802044cc1b
+HSG-SRT.A.3,HSG-SRT.C.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",b6e9c00b-9bc7-5c75-bc93-bc6c7ec74b00
+HSG-SRT.B.5,HSF-TF.C.9,"high school: one record per course, pairing undecided",the California item has no CDE record,e38669f8-d3f7-55d8-bb61-3ffa064c0d2b
+HSG-SRT.B.5,HSG-GPE.B.5,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",908ce14f-5fc8-5bab-831b-180a34ca4a3f
+HSG-SRT.B.5,HSG-GPE.B.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",77b647b0-f540-504a-bf00-e02bc2972719
+HSG-SRT.C.6,HSF-TF.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",d32f82b8-f5b8-5922-91d5-4e5b4e2a2e82
+HSG-SRT.C.6,HSF-TF.C.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",598d5982-e839-5a4a-836c-17ee251a3901
+HSG-SRT.C.6,HSF-TF.C.9,"high school: one record per course, pairing undecided",the California item has no CDE record,d14c616a-612a-5bf8-a54f-d58392b5f33a
+HSG-SRT.C.6,HSG-SRT.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",0b918338-0e68-5da7-a421-538d8564499a
+HSG-SRT.C.6,HSG-SRT.C.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",221398fb-f7b9-50f0-9d8b-f35616c3eb25
+HSG-SRT.C.6,HSG-SRT.D.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",6d8837db-bcf7-563f-8578-1db2b572e363
+HSG-SRT.C.7,HSF-TF.A.3,"high school: one record per course, pairing undecided",the California item has no CDE record,ada97bfe-ba10-5b68-a557-ce0f5212cade
+HSG-SRT.C.7,HSG-SRT.C.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",0c05fef7-b602-56b7-afc7-0800b60e4a6f
+HSG-SRT.C.8,HSG-SRT.D.10,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",b32e35be-20a5-5d63-a837-9795485858b3
+HSG-SRT.C.8,HSG-SRT.D.11,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",2b7049af-f93b-5228-9533-d4c41ad2bd9f
+HSN-CN.A.1,HSN-CN.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",3a157837-5ea1-5a29-8943-19708b8a0259
+HSN-CN.A.1,HSN-CN.B.4,"high school: one record per course, pairing undecided",the California item has no CDE record,d8bff87e-5d6b-5f48-bda3-f4ff8297d9bb
+HSN-CN.A.1,HSN-CN.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",fcd9fae2-7dfc-550c-a7fe-2172466fe3ab
+HSN-CN.A.2,HSN-CN.A.3,"high school: one record per course, pairing undecided",the California item has no CDE record,7ba89689-6e9b-5c33-8841-d25a4f0bf637
+HSN-CN.A.2,HSN-CN.C.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",cd28520d-6e11-5015-b596-26861e1747f1
+HSN-CN.A.2,HSN-CN.C.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",d4c291df-de0f-5474-a218-fda599fe9f2c
+HSN-CN.A.3,HSN-CN.B.4,the California item has no CDE record,the California item has no CDE record,85428dff-cef3-5d69-a616-bcd59c229f8f
+HSN-CN.A.3,HSN-CN.B.5,the California item has no CDE record,the California item has no CDE record,4e61b7de-f52f-509f-8822-5c96bd4e9a1b
+HSN-CN.B.4,HSN-CN.B.5,the California item has no CDE record,the California item has no CDE record,27b1459f-48e9-5e8c-9920-42f29bf24bb0
+HSN-CN.B.5,HSN-CN.B.6,the California item has no CDE record,the California item has no CDE record,10d678ab-df39-5ba0-abc2-3f7791ea124a
+HSN-CN.C.7,HSN-CN.C.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",58f9e130-5152-570a-a185-7b0ec8c7166b
+HSN-CN.C.8,HSN-CN.C.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",abb7705d-3cd1-5cb1-b737-3dd8f4cfad3a
+HSN-RN.A.1,HSN-RN.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",5881366b-860a-58cf-9f0f-7bbfed91e1df
+HSN-RN.A.2,HSA-REI.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",177fe4e0-91d5-54d7-8f7b-e7d1cf67f3f5
+HSN-RN.A.2,HSA-SSE.B.3.c,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",ad1ba1e7-a4e3-5663-8ed0-d8aa345924cc
+HSN-RN.A.2,HSF-IF.C.8.b,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",cce27d29-6666-5bb4-a17a-bd983c78b2a7
+HSN-RN.B.3,HSN-CN.A.1,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",6a0ef386-51ac-5391-8646-137a305bac26
+HSS-CP.A.1,HSS-CP.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",890d212e-3e05-5561-a77a-0d965eeeee9a
+HSS-CP.A.1,HSS-CP.A.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",e6c25f0f-fa99-59ae-99d7-2745b2808cae
+HSS-CP.A.1,HSS-CP.B.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",116594f7-260a-5233-9bcb-e90ae4d1435f
+HSS-CP.A.1,HSS-CP.B.7,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",a338d0f1-fce7-5797-a4cc-559b6de33fc6
+HSS-CP.A.3,HSS-CP.B.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",89f07eb4-2945-562b-8019-1e189b6ecbc7
+HSS-CP.A.3,HSS-CP.B.8,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",129e0177-640a-5626-9c62-218dd4030cfa
+HSS-CP.B.6,HSS-CP.B.9,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",9240a4b2-9338-56cb-80f8-7274d97a908b
+HSS-IC.A.1,HSS-IC.B.3,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",4b6d51a3-4665-58e6-baed-b13e9e8d6446
+HSS-IC.A.1,HSS-IC.B.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",17266d19-2710-5b72-9f6d-fc557d3f85ed
+HSS-IC.B.3,HSS-IC.B.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",b1ff425b-b56d-5bda-af5a-61bfb4a8b3d6
+HSS-IC.B.4,HSS-IC.B.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",fdae3d65-9610-5b6a-a1bc-bbc55c7e31fb
+HSS-IC.B.5,HSS-IC.B.6,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",33139c91-eca0-5010-bc74-e38295e8e2d4
+HSS-ID.A.1,HSS-ID.A.2,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",333d0f8a-5162-56da-b03d-d953546dee0d
+HSS-ID.A.2,HSS-ID.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",5c3c81db-8dda-516f-a043-ef183e4e857b
+HSS-ID.B.5,HSS-CP.A.4,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",76a2867c-eb98-5bff-9ffc-b28d56f619cc
+HSS-ID.B.6.a,HSS-ID.B.6.b,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",11fa0724-58d9-5398-9643-d774d66e9427
+HSS-ID.B.6.b,HSS-ID.B.6.c,"high school: one record per course, pairing undecided","high school: one record per course, pairing undecided",e6c30ef0-3457-5972-a06a-4291fdc90f5e

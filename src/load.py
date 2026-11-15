@@ -5,8 +5,10 @@ load.py - rebuild data/build/standards.db from the scraped records files.
     python src/load.py
 
 Reads the newest data/raw/<subject>_records_<date>.csv for math, ela and eld,
-plus docs/reference/codes.csv, and writes data/build/standards.db. The old
-database is replaced, never updated in place (decisions 0007, 0010).
+docs/reference/codes.csv, data/curated/identifier_corrections.csv and, if it
+exists, data/derived/learning_commons_edges.csv, and writes
+data/build/standards.db. The old database is replaced, never updated in place
+(decisions 0007, 0010).
 
 Every standard is keyed by its CDE record ID (0011). Text and identifiers are
 stored exactly as CDE writes them; anything the loader works out (grades,
@@ -28,7 +30,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 SUBJECTS = ("math", "ela", "eld")
 
 # Records-file column -> database column.
@@ -161,6 +163,13 @@ def split_sub_items(text):
 
 
 CA_WORD = re.compile(r"\bCA\b")
+PLACEHOLDER = re.compile(r"^\([^)]*\)( CA)?$")
+
+
+def is_placeholder(text):
+    """True for '(Begins in grade 2)' or '(Not applicable to literature)': the
+    identifier is listed but there is no standard at this grade."""
+    return bool(PLACEHOLDER.match(text.strip()))
 
 
 def flags(text):
@@ -191,8 +200,17 @@ def read_codes(codes_path):
     return codes
 
 
-def read_records(path, subject, codes):
+def read_corrections(path):
+    """{record_id: row} from data/curated/identifier_corrections.csv."""
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8", newline="") as f:
+        return {int(r["record_id"]): r for r in csv.DictReader(f)}
+
+
+def read_records(path, subject, codes, corrections=None):
     """Turn one records file into (standards rows, sub-item rows, notes)."""
+    corrections = corrections or {}
     with open(path, encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         columns = set(reader.fieldnames or [])
@@ -207,7 +225,7 @@ def read_records(path, subject, codes):
         raise LoadError(f"{path.name}: no rows")
 
     standards, sub_items = [], []
-    notes = {"unparsed": [], "grade_mismatch": []}
+    notes = {"unparsed": [], "grade_mismatch": [], "corrected": []}
     for line, row in enumerate(rows, start=2):          # line 1 is the header
         where = f"{path.name} line {line} ({row['identifier']})"
         record_id = row["record_id"]
@@ -239,7 +257,15 @@ def read_records(path, subject, codes):
 
         identifier = row["identifier"]
         identifier_norm = normalize_identifier(identifier)
-        parts = parse_identifier(subject, identifier_norm)
+        corrected = None
+        if int(record_id) in corrections:
+            fix = corrections[int(record_id)]
+            if fix["identifier"] != identifier:
+                raise LoadError(f"{where}: identifier_corrections.csv expects record {record_id} "
+                                f"to be {fix['identifier']!r}. The site may have changed; check it.")
+            corrected = normalize_identifier(fix["corrected_identifier"])
+            notes["corrected"].append((int(record_id), identifier, corrected))
+        parts = parse_identifier(subject, corrected or identifier_norm)
         if parts is None:
             notes["unparsed"].append((int(record_id), identifier))
             parts = dict(strand=None, grade=None, number=None, letter=None, level=None, parent=None)
@@ -248,7 +274,7 @@ def read_records(path, subject, codes):
 
         ca_marker, has_asterisk = flags(texts["text_standard"])
         standards.append((
-            int(record_id), row["url"], subject, identifier, identifier_norm,
+            int(record_id), row["url"], subject, identifier, identifier_norm, corrected,
             grade_label, grade_min, grade_max,
             fields["subject_area"], fields["domain"], fields["cluster"], cluster_code, merged,
             fields["discipline"], fields["conceptual_category"], fields["critical_principle"],
@@ -257,23 +283,94 @@ def read_records(path, subject, codes):
             searchable,
             int(parts["strand"] is not None), parts["strand"], parts["grade"], parts["number"],
             parts["letter"], parts["level"], parts["parent"],
-            ca_marker, has_asterisk, path.name, int(row["page"]),
+            ca_marker, has_asterisk, int(is_placeholder(texts["text_standard"])),
+            path.name, int(row["page"]),
         ))
         for letter, text in split_sub_items(texts["text_standard"])[1]:
             sub_items.append((int(record_id), letter, text, *flags(text)))
     return standards, sub_items, notes
 
 
+# ---------- edges ----------
+
+LEVELS = ("Em", "Ex", "Br")
+
+
+def structural_edges(con):
+    """Links the identifiers themselves imply (0005). Placeholders are skipped,
+    so a chain runs past a grade where CDE lists '(Begins in grade 2)'."""
+    edges = []
+    rows = con.execute(
+        "SELECT record_id, subject, id_strand, id_number, id_letter, id_level, grade_min "
+        "FROM standards WHERE id_parsed = 1 AND is_placeholder = 0 AND subject IN ('ela', 'eld')"
+    ).fetchall()
+
+    # ELA: same strand and number, next grade that has one. L.4.1 -> L.5.1.
+    ela = {}
+    for rid, subject, strand, number, _, _, grade in rows:
+        if subject == "ela":
+            ela.setdefault((strand, number), []).append((grade, rid))
+    for chain in ela.values():
+        chain.sort()
+        for (g1, a), (g2, b) in zip(chain, chain[1:]):
+            if g1 < g2:
+                edges.append((a, b, "next_grade", "structural", None, 0))
+
+    # ELD: same part, number and level in the next grade. Lettering changes
+    # between grades (PI.6 in grade 3 becomes PI.6a and PI.6b in grade 4). A
+    # record links to the same letter where the earlier grade has it, and
+    # otherwise to every record of that number in the earlier grade.
+    eld, by_grade = {}, {}
+    for rid, subject, part, number, letter, level, grade in rows:
+        if subject == "eld":
+            eld.setdefault((part, number, level), {}).setdefault(grade, []).append((letter, rid))
+            by_grade.setdefault((part, number, letter, grade), {})[level] = rid
+    for grades in eld.values():
+        ordered = sorted(grades)
+        for g1, g2 in zip(ordered, ordered[1:]):
+            earlier = dict(grades[g1])
+            for letter, rid in grades[g2]:
+                if letter in earlier:
+                    edges.append((earlier[letter], rid, "next_grade", "structural", None, 0))
+                else:
+                    for from_rid in earlier.values():
+                        edges.append((from_rid, rid, "next_grade", "structural",
+                                      "lettering differs between these grades", 0))
+    # ELD: Emerging -> Expanding -> Bridging for the same standard in one grade.
+    for levels in by_grade.values():
+        for lower, higher in zip(LEVELS, LEVELS[1:]):
+            if lower in levels and higher in levels:
+                edges.append((levels[lower], levels[higher], "next_level", "structural", None, 0))
+    return edges
+
+
+def read_imported_edges(path, known_ids):
+    """Rows of data/derived/learning_commons_edges.csv, written by
+    scripts/join_learning_commons.py. Missing file: no imported edges."""
+    if not path.exists():
+        return []
+    edges = []
+    with open(path, encoding="utf-8", newline="") as f:
+        for line, r in enumerate(csv.DictReader(f), start=2):
+            a, b = int(r["from_record_id"]), int(r["to_record_id"])
+            if a not in known_ids or b not in known_ids:
+                raise LoadError(f"{path.name} line {line}: record {a} or {b} is not in the "
+                                "records files. Re-run scripts/join_learning_commons.py.")
+            edges.append((a, b, r["type"], r["source"], r["note"] or None, int(r["reviewed"])))
+    return edges
+
+
 # ---------- building the database ----------
 
-def build(raw_dir, codes_path, schema_path, db_path):
+def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edges_path=None):
     """Read everything, then write the database. Returns a summary dict."""
     codes = read_codes(codes_path)
-    loaded, summary = [], {"subjects": {}, "unparsed": [], "grade_mismatch": []}
+    corrections = read_corrections(corrections_path) if corrections_path else {}
+    loaded, summary = [], {"subjects": {}, "unparsed": [], "grade_mismatch": [], "corrected": []}
     seen = {}
     for subject in SUBJECTS:
         path = newest_records_file(raw_dir, subject)
-        standards, sub_items, notes = read_records(path, subject, codes)
+        standards, sub_items, notes = read_records(path, subject, codes, corrections)
         for row in standards:
             if row[0] in seen:
                 raise LoadError(f"record ID {row[0]} appears twice: {seen[row[0]]} and {path.name}")
@@ -283,6 +380,12 @@ def build(raw_dir, codes_path, schema_path, db_path):
                                         "sub_items": len(sub_items)}
         summary["unparsed"] += notes["unparsed"]
         summary["grade_mismatch"] += notes["grade_mismatch"]
+        summary["corrected"] += notes["corrected"]
+    unknown = set(corrections) - set(seen)
+    if unknown:
+        raise LoadError(f"identifier_corrections.csv names records that are not in the "
+                        f"records files: {sorted(unknown)}")
+    imported = read_imported_edges(edges_path, seen) if edges_path else []
 
     # Build into a temporary file and swap it in at the end, so a failure
     # part-way never leaves a half-written standards.db behind.
@@ -306,8 +409,15 @@ def build(raw_dir, codes_path, schema_path, db_path):
             con.execute("INSERT INTO source_files VALUES (?, ?, ?, ?)",
                         (subject, path.name, hashlib.sha256(path.read_bytes()).hexdigest(),
                          len(standards)))
-            con.executemany(f"INSERT INTO standards VALUES ({','.join('?' * 33)})", standards)
+            con.executemany(f"INSERT INTO standards VALUES ({','.join('?' * 35)})", standards)
             con.executemany("INSERT INTO sub_items VALUES (?, ?, ?, ?, ?)", sub_items)
+        con.executemany("INSERT INTO identifier_corrections VALUES (?, ?, ?, ?, ?, ?)",
+                        [(rid, r["identifier"], r["corrected_identifier"], r["evidence"],
+                          r["source"], int(r["reviewed"])) for rid, r in sorted(corrections.items())])
+        edges = structural_edges(con) + imported
+        con.executemany("INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?)", edges)
+        summary["edges"] = con.execute(
+            "SELECT type, source, COUNT(*) FROM edges GROUP BY 1, 2 ORDER BY 1, 2").fetchall()
         con.commit()
     finally:
         con.close()
@@ -323,18 +433,26 @@ def main():
     ap.add_argument("--db", type=Path, default=ROOT / "data" / "build" / "standards.db")
     args = ap.parse_args()
     try:
-        summary = build(args.raw, args.codes, ROOT / "src" / "schema.sql", args.db)
+        summary = build(args.raw, args.codes, ROOT / "src" / "schema.sql", args.db,
+                        ROOT / "data" / "curated" / "identifier_corrections.csv",
+                        ROOT / "data" / "derived" / "learning_commons_edges.csv")
     except LoadError as e:
         sys.exit(f"Load stopped, database not changed.\n  {e}")
 
     for subject, s in summary["subjects"].items():
         print(f"{subject:5} {s['records']:4} records, {s['sub_items']:3} sub-items   from {s['file']}")
-    print(f"\nidentifiers the loader could not split into parts: {len(summary['unparsed'])}")
+    print(f"\nidentifiers read through a correction: {len(summary['corrected'])}")
+    for record_id, identifier, corrected in summary["corrected"]:
+        print(f"  record {record_id}: {identifier} read as {corrected}")
+    print(f"identifiers the loader could not split into parts: {len(summary['unparsed'])}")
     for record_id, identifier in summary["unparsed"]:
         print(f"  record {record_id}: {identifier}")
     print(f"grade in the identifier differs from the Grade field: {len(summary['grade_mismatch'])}")
     for record_id, identifier, grade in summary["grade_mismatch"]:
         print(f"  record {record_id}: {identifier} has Grade {grade}")
+    print("\nedges:")
+    for kind, source, n in summary["edges"]:
+        print(f"  {n:5}  {kind} ({source})")
     print(f"\nWrote {args.db}")
 
 

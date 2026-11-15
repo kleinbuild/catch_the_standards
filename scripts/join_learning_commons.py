@@ -31,10 +31,21 @@ How records are paired. The code decides; the text only confirms.
 
 Nothing is guessed: a record with no match gets a row saying so.
 
+It then brings in the math "builds towards" links (the Student Achievement
+Partners coherence map). Those links join Common Core standards, so each end is
+followed from the Common Core item to the California item Learning Commons
+rates as the same (jaccard 1.0), and from there to the CDE record. A link is
+written only when each end comes out as records with no choice to make. A
+parent standard with no record of its own (3.NF.2) stands for its sub-item
+records. High school links are left out for now: the same standard is a
+separate record in each course, and which course pairs with which is undecided.
+
 Writes to data/derived/:
-  learning_commons_map.csv        one row per pairing (or per unmatched record)
-  learning_commons_unmapped.csv   California items no CDE record pairs with
-  learning_commons_source.json    which Learning Commons files were read
+  learning_commons_map.csv               one row per pairing (or per unmatched record)
+  learning_commons_unmapped.csv          California items no CDE record pairs with
+  learning_commons_edges.csv             builds-towards links between CDE records; the loader reads this
+  learning_commons_edges_unresolved.csv  links not written, and why
+  learning_commons_source.json           which Learning Commons files were read
 """
 import argparse
 import csv
@@ -138,13 +149,18 @@ def read_california_items(graph_dir):
         if not p.exists():
             sys.exit(f"Cannot find {p}\nSee the top of this script for where the "
                      "Learning Commons files go.")
-    items, frameworks = {}, set()
+    items, frameworks, ccss = {}, set(), {}
     with open(nodes, encoding="utf-8") as f:
         for line in f:
-            if '"California"' not in line:        # cheap test before the slower json.loads
+            # cheap test before the slower json.loads
+            if '"California"' not in line and '"Multi-State"' not in line:
                 continue
             node = json.loads(line)
             p = node["properties"]
+            if (p.get("jurisdiction") == "Multi-State" and p.get("academicSubject") == "Mathematics"
+                    and "StandardsFrameworkItem" in node["labels"]):
+                ccss[node["identifier"]] = (p.get("statementCode") or "").strip()
+                continue
             if p.get("jurisdiction") != "California":
                 continue
             if "StandardsFramework" in node["labels"]:
@@ -159,14 +175,21 @@ def read_california_items(graph_dir):
                     "grades": json.loads(p.get("gradeLevel") or "[]"),
                     "text": p.get("description") or "",
                 }
-    parent = {}
+    parent, builds, same_as = {}, [], defaultdict(list)
     with open(rels, encoding="utf-8") as f:
         for line in f:
-            if "hasChild" not in line:
+            if "hasChild" not in line and "buildsTowards" not in line \
+                    and "hasStandardAlignment" not in line:
                 continue
             rel = json.loads(line)
-            if rel["label"] == "hasChild" and rel["target_identifier"] in items:
-                parent[rel["target_identifier"]] = rel["source_identifier"]
+            a, b = rel["source_identifier"], rel["target_identifier"]
+            if rel["label"] == "hasChild" and b in items:
+                parent[b] = a
+            elif rel["label"] == "buildsTowards" and a in ccss and b in ccss:
+                builds.append((a, b, rel["identifier"]))
+            elif (rel["label"] == "hasStandardAlignment" and a in items and b in ccss
+                  and rel["properties"].get("jaccard") == "1.0"):
+                same_as[b].append(a)        # Common Core item -> California items
     for key, item in items.items():
         item["parent_code"] = items.get(parent.get(key), {}).get("code", "")
         item["course"] = ""
@@ -176,7 +199,62 @@ def read_california_items(graph_dir):
                 item["course"] = COURSES.get(items[up]["text"], items[up]["text"])
                 break
             up = parent.get(up)
-    return items, nodes, rels
+    children = defaultdict(list)
+    for child, up in parent.items():
+        children[up].append(child)
+    graph = {"ccss": ccss, "builds": builds, "same_as": same_as, "children": children}
+    return items, graph, nodes, rels
+
+
+# ---------- builds-towards links ----------
+
+def import_edges(rows, items, graph):
+    """Returns (edge rows, unresolved rows). See the top of this file for the rule."""
+    records_of = defaultdict(set)           # Learning Commons identifier -> CDE record IDs
+    info = {}                               # record ID -> (identifier, discipline)
+    for r in rows:
+        if r[2] == "math" and r[1] == "" and r[6]:
+            records_of[r[6]].add(r[0])
+            info[r[0]] = (r[3], r[4])
+
+    def resolve(ccss_id):
+        """(record IDs, how, problem). Record IDs is empty when there is a problem."""
+        ca_items = graph["same_as"].get(ccss_id, [])
+        if not ca_items:
+            return set(), "", "no California item rated the same (jaccard 1.0)"
+        found, how = set(), ""
+        for item in ca_items:
+            if records_of[item]:
+                found |= records_of[item]
+            else:                           # a parent with no record: use its sub-items
+                kids = set()
+                for child in graph["children"].get(item, []):
+                    kids |= records_of[child]
+                if kids:
+                    found |= kids
+                    how = "parent standard has no CDE record; linked through its sub-items"
+        if not found:
+            return set(), "", "the California item has no CDE record"
+        if any(info[r][1] for r in found):
+            return set(), "", "high school: one record per course, pairing undecided"
+        return found, how, ""
+
+    edges, unresolved, seen = [], [], set()
+    for a, b, rel_id in graph["builds"]:
+        code_a, code_b = graph["ccss"][a], graph["ccss"][b]
+        from_ids, how_a, problem_a = resolve(a)
+        to_ids, how_b, problem_b = resolve(b)
+        if problem_a or problem_b:
+            unresolved.append([code_a, code_b, problem_a, problem_b, rel_id])
+            continue
+        note = "; ".join(dict.fromkeys(h for h in (how_a, how_b) if h))
+        for x in sorted(from_ids):
+            for y in sorted(to_ids):
+                if x != y and (x, y) not in seen:
+                    seen.add((x, y))
+                    edges.append([x, y, "builds_towards", "learning_commons", note, 0,
+                                  info[x][0], info[y][0], code_a, code_b, rel_id])
+    return edges, unresolved
 
 
 # ---------- pairing ----------
@@ -239,7 +317,7 @@ def pair(records, sub_items, items):
             pair_eld(rec, by_code, add, none)
             continue
 
-        candidates = by_code.get((subject, rec["identifier_norm"]), [])
+        candidates = by_code.get((subject, rec["join_identifier"]), [])
         match = "code"
         if subject == "math" and rec["discipline"]:
             in_course = [c for c in candidates if c["course"] == rec["discipline"]]
@@ -288,7 +366,7 @@ ELD_NUMBER = re.compile(r"\.(\d+)[a-z]?\.(?:Em|Ex|Br)$")
 def pair_eld(rec, by_code, add, none):
     part = {"Part I": "I", "Part II": "II"}.get((rec["critical_principle"] or "").split(":")[0])
     cluster = (rec["cluster"] or "")[:1]
-    number = ELD_NUMBER.search(rec["identifier_norm"])
+    number = ELD_NUMBER.search(rec["join_identifier"])
     if not (part and cluster and number):
         none(rec, "", "cannot read part, cluster or number from the record")
         return
@@ -314,7 +392,10 @@ def main():
         sys.exit(f"{args.db} does not exist. Run: python src/load.py")
     con = sqlite3.connect(args.db)
     con.row_factory = sqlite3.Row       # lets rows be read by column name
-    records = con.execute("SELECT * FROM standards ORDER BY subject, record_id").fetchall()
+    # join_identifier: the corrected identifier where CDE's own is wrong.
+    records = con.execute(
+        "SELECT *, COALESCE(identifier_corrected, identifier_norm) AS join_identifier "
+        "FROM standards ORDER BY subject, record_id").fetchall()
     sub_items = defaultdict(list)
     for r in con.execute("SELECT record_id, letter, text FROM sub_items ORDER BY record_id, letter"):
         sub_items[r["record_id"]].append((r["letter"], r["text"]))
@@ -322,8 +403,9 @@ def main():
 
     graph_dir = find_lc_dir(args.lc) / "open-knowledge-graph"
     print(f"reading {graph_dir} (two large files; about a minute) ...")
-    items, nodes_path, rels_path = read_california_items(graph_dir)
+    items, graph, nodes_path, rels_path = read_california_items(graph_dir)
     rows, used = pair(records, sub_items, items)
+    edges, unresolved = import_edges(rows, items, graph)
 
     args.out.mkdir(parents=True, exist_ok=True)
     with open(args.out / "learning_commons_map.csv", "w", newline="", encoding="utf-8") as f:
@@ -342,11 +424,25 @@ def main():
         for i in unmapped:
             w.writerow([i["subject"], i["code"], i["type"], i["course"], " ".join(i["grades"]),
                         i["parent_code"], i["case_uuid"], i["lc_identifier"]])
+    with open(args.out / "learning_commons_edges.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["from_record_id", "to_record_id", "type", "source", "note", "reviewed",
+                    "from_identifier", "to_identifier", "lc_from_code", "lc_to_code",
+                    "lc_relationship_id"])
+        w.writerows(sorted(edges, key=lambda e: (e[0], e[1])))
+    with open(args.out / "learning_commons_edges_unresolved.csv", "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["lc_from_code", "lc_to_code", "from_problem", "to_problem",
+                    "lc_relationship_id"])
+        w.writerows(sorted(unresolved))
     source = {p.name: {"bytes": p.stat().st_size} for p in (nodes_path, rels_path)}
     source["nodes.jsonl"]["sha256"] = hashlib.sha256(nodes_path.read_bytes()).hexdigest()
     source["note"] = ("Learning Commons Knowledge Graph, open-knowledge-graph export. "
                       "Provided by Learning Commons under CC BY 4.0; standards data from the "
-                      "publishers named in each item's attributionStatement.")
+                      "publishers named in each item's attributionStatement. Learning "
+                      "progressions (builds-towards links) are provided under CC0 from "
+                      "Student Achievement Partners.")
     (args.out / "learning_commons_source.json").write_text(json.dumps(source, indent=2) + "\n",
                                                            encoding="utf-8")
 
@@ -368,6 +464,10 @@ def main():
     print(f"\nCalifornia standards and components no record pairs with: {len(unmapped)}")
     for (subject, kind), n in sorted(Counter((i['subject'], i['type']) for i in unmapped).items()):
         print(f"    {subject:5} {kind:10} {n}")
+    print(f"\nbuilds-towards links in Learning Commons: {len(graph['builds'])}")
+    print(f"    {len(graph['builds']) - len(unresolved):5}  written, as {len(edges)} links between CDE records")
+    for why, n in Counter(u[2] or u[3] for u in unresolved).most_common():
+        print(f"    {n:5}  not written: {why}")
     print(f"\nWrote {args.out}")
 
 

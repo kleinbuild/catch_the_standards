@@ -80,6 +80,12 @@ class SmallFunctions(unittest.TestCase):
         self.assertEqual(load.flags("Ensure agreement.*"), (0, 1))
         self.assertEqual(load.flags("CALCULATE the sum."), (0, 0))
 
+    def test_placeholder(self):
+        self.assertTrue(load.is_placeholder("(Begins in grade 2) CA"))
+        self.assertTrue(load.is_placeholder("(Not applicable to literature)"))
+        # "(+)" opens a real high school standard.
+        self.assertFalse(load.is_placeholder("(+) Extend polynomial identities to the complex numbers."))
+
 
 class BuiltDatabase(unittest.TestCase):
 
@@ -87,8 +93,11 @@ class BuiltDatabase(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         db = Path(cls.tmp.name) / "standards.db"
+        # Built with the identifier corrections but without the imported
+        # Learning Commons edges, so these tests check only what the loader makes.
         cls.summary = load.build(ROOT / "data" / "raw", ROOT / "docs" / "reference" / "codes.csv",
-                                 ROOT / "src" / "schema.sql", db)
+                                 ROOT / "src" / "schema.sql", db,
+                                 ROOT / "data" / "curated" / "identifier_corrections.csv")
         cls.con = sqlite3.connect(db)
 
     @classmethod
@@ -127,11 +136,59 @@ class BuiltDatabase(unittest.TestCase):
         self.assertTrue(self.q("SELECT 1 FROM standards WHERE identifier = 'F-IF.3' "
                                "AND text_standard LIKE '%n − 1%'"))
 
-    def test_malformed_identifiers_are_kept_as_written(self):
-        unparsed = sorted(i for _, i in self.summary["unparsed"])
-        self.assertEqual(unparsed, ["ELD.PI.12a.Br", "ELD.PI.12a.Em", "ELD.PI.12a.Ex",
-                                    "RL.2..2", "RL.2..3"])
-        self.assertEqual(self.q("SELECT COUNT(*) FROM standards WHERE id_parsed = 0"), [(5,)])
+    def test_malformed_identifiers_are_kept_and_read_through_corrections(self):
+        # The identifier stays as CDE wrote it; the parts come from the correction.
+        self.assertEqual(self.q("SELECT identifier, identifier_norm, identifier_corrected, "
+                                "id_strand, id_grade, id_number FROM standards WHERE record_id = 5604"),
+                         [("RL.2..2", "RL.2..2", "RL.2.2", "RL", "2", "2")])
+        self.assertEqual(self.q("SELECT identifier, id_grade, id_number, id_letter FROM standards "
+                                "WHERE record_id = 7276"), [("ELD.PI.12a.Em", "4", "12", "a")])
+        self.assertEqual(self.q("SELECT identifier, id_number FROM standards WHERE record_id = 7480"),
+                         [("ELD.PI.7.78.Em", "8")])
+        self.assertEqual(self.summary["unparsed"], [])
+        self.assertEqual(len(self.summary["corrected"]), 7)
+
+    def test_without_corrections_the_malformed_ones_are_reported(self):
+        codes = load.read_codes(ROOT / "docs" / "reference" / "codes.csv")
+        unparsed = []
+        for subject in ("ela", "eld"):
+            path = load.newest_records_file(ROOT / "data" / "raw", subject)
+            unparsed += [i for _, i in load.read_records(path, subject, codes)[2]["unparsed"]]
+        self.assertEqual(sorted(unparsed), ["ELD.PI.12a.Br", "ELD.PI.12a.Em", "ELD.PI.12a.Ex",
+                                            "RL.2..2", "RL.2..3"])
+
+    def chain(self, where):
+        return self.q("SELECT a.identifier, b.identifier FROM edges e "
+                      "JOIN standards a ON a.record_id = e.from_record_id "
+                      "JOIN standards b ON b.record_id = e.to_record_id "
+                      f"WHERE {where} ORDER BY a.grade_min, a.identifier, b.identifier")
+
+    def test_ela_progression(self):
+        # 0005: every L.x.1 from K to 11-12, in grade order.
+        links = self.chain("e.type = 'next_grade' AND a.id_strand = 'L' AND a.id_number = '1'")
+        self.assertEqual(links[0], ("L.K.1", "L.1.1"))
+        self.assertEqual(links[-1], ("L.9-10.1", "L.11-12.1"))
+        self.assertEqual(len(links), 10)
+
+    def test_progression_skips_placeholders(self):
+        # L.K.3 and L.1.3 read "(Begins in grade 2)"; the chain starts at grade 2.
+        links = self.chain("e.type = 'next_grade' AND a.id_strand = 'L' AND a.id_number = '3'")
+        self.assertEqual(links[0], ("L.2.3", "L.3.3"))
+        self.assertEqual(self.q("SELECT COUNT(*) FROM standards WHERE is_placeholder = 1"), [(24,)])
+
+    def test_eld_progression_where_lettering_changes(self):
+        # ELD.PI.3.6 becomes 6a and 6b in grade 4.
+        links = self.chain("e.type = 'next_grade' AND a.identifier = 'ELD.PI.3.6.Em'")
+        self.assertEqual(links, [("ELD.PI.3.6.Em", "ELD.PI.4.6a.Em"), ("ELD.PI.3.6.Em", "ELD.PI.4.6b.Em")])
+
+    def test_eld_levels(self):
+        links = self.chain("e.type = 'next_level' AND a.identifier LIKE 'ELD.PI.K.1.%'")
+        self.assertEqual(links, [("ELD.PI.K.1.Em", "ELD.PI.K.1.Ex"), ("ELD.PI.K.1.Ex", "ELD.PI.K.1.Br")])
+        # The mistyped record joins its Expanding sibling through the correction.
+        self.assertIn(("ELD.PI.7.78.Em", "ELD.PI.7.8.Ex"), self.chain("e.type = 'next_level'"))
+
+    def test_no_edge_is_marked_reviewed(self):
+        self.assertEqual(self.q("SELECT COUNT(*) FROM edges WHERE reviewed <> 0"), [(0,)])
 
     def test_identifier_grade_agrees_with_grade_field(self):
         self.assertEqual(self.summary["grade_mismatch"], [])
@@ -179,6 +236,16 @@ class StopsRatherThanGuesses(unittest.TestCase):
                             encoding="utf-8")
             with self.assertRaises(load.LoadError):
                 load.read_records(path, "ela", {})
+
+    def test_correction_for_a_changed_identifier_stops_the_load(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ela_records_2099-01-01.csv"
+            path.write_text("record_id,url,identifier,Grade,text_Standard,page\n"
+                            "1,https://www2.cde.ca.gov/cacs/id/web/1,L.1.1,1,Text.,0\n",
+                            encoding="utf-8")
+            fix = {1: {"identifier": "L.1..1", "corrected_identifier": "L.1.1"}}
+            with self.assertRaises(load.LoadError):
+                load.read_records(path, "ela", {}, fix)
 
     def test_label_missing_from_codes_stops_the_load(self):
         with tempfile.TemporaryDirectory() as tmp:
