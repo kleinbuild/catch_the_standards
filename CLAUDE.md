@@ -90,7 +90,7 @@ tests/             test_load.py, test_join.py, test_lookup.py; run with `python 
 
 The first slice of the data work is finished and the owner wants to move to interface design and a prototype. Read `docs/design/ui-options.md` first: it holds Claude's first thoughts on delivery (a web page with the database inside it is recommended), on how to draw the prerequisite view, and six questions for the owner, with the owner's answers (2026-11-16).
 
-Prototype, 2026-11-16, on branch `design/ui-prototype` (from `build/loader`): `docs/design/prototype/index.html` opens by double-click once `python src/load.py` and `python scripts/make_prototype_data.py` have been run. It holds the whole database (2.7 MB) and has two screens. Search takes a code, words, or subject and grade, with a high school course choice and an ELD level choice; words are also looked for in learning components. The standard screen shows the ladder by default (the owner's choice; table and both remain as a toggle), learning components, the ELA and ELD lists, one step forward, and a collected list that records how each item was reached. `#s=<record ID>` and `#q=<words>&subject=math&grade=2` open a view directly.
+Prototype, 2026-11-16, built on branch `design/ui-prototype` and merged into `build/loader` on 2026-11-17: `docs/design/prototype/index.html` opens by double-click once `python src/load.py` and `python scripts/make_prototype_data.py` have been run. It holds the whole database (2.7 MB) and has two screens. Search takes a code, words, or subject and grade, with a high school course choice and an ELD level choice; words are also looked for in learning components. The standard screen shows the ladder by default (the owner's choice; table and both remain as a toggle), learning components, the ELA and ELD lists, one step forward, and a collected list that records how each item was reached. `#s=<record ID>` and `#q=<words>&subject=math&grade=2` open a view directly.
 
 Owner's decisions on 2026-11-16: ladder is the default layout; review sheets get an optional `confidence` column (low, medium, high), which the loader stores on `edges.confidence` for kept links with `reviewed=1`; search and the full export were to be built next, and are.
 
@@ -111,7 +111,7 @@ None of these needs the venv; they use only Python's standard library.
 
 Waiting on the owner:
 - Marking the review sheets in `data/curated/review/` (how: the README there), starting 2026-11-15. No row is marked yet. The seven rows of `data/curated/identifier_corrections.csv` are also `reviewed=0`.
-- Merging `build/loader` into `main`. No pull request has been opened. `main` is 12 commits behind.
+- Merging `build/loader` into `main`. No pull request has been opened. `main` is 16 commits behind (2026-11-17).
 - On the Debian laptop: `git fetch origin && git switch main && git reset --hard origin/main`, not `git pull`. The laptop still has the commit that held `ccssmgraph.pdf`, and a pull would merge it back.
 - Asking GitHub Support to remove unreachable commit 20bc256 from `kleinbuild/catch_the_standards`, if the owner wants the PDF gone for good.
 - Whether `cacs_probe/` stays in the repo.
