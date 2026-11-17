@@ -34,13 +34,15 @@ When asked to document what was learned, write it as working notes: claim, then 
 ```
 CLAUDE.md, README.md, requirements.txt, .gitignore
 docs/decisions/    one file per decision, numbered; read these before changing data handling
-docs/design/       ui-options.md (first thoughts on the interface and how teachers get the tool; not decided)
+docs/design/       ui-options.md (first thoughts on the interface and how teachers get the tool; the owner's answers)
+                   prototype/ (index.html, app.js, data.js: three standards in two layouts; open index.html by double-click)
 docs/reference/    glossary.md (project terms); generated CACS_URL_REFERENCE.md, codes.csv, codes.json
 scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE record; the standards source, 0011)
                    match_csv_to_records.py (pairs dl=1 CSV rows with scraped records)
                    probe_cacs_ids.py (fetch one HTML results page and report record links and symbols)
                    join_learning_commons.py (pairs CDE records with Learning Commons items; imports math builds-towards links; writes data/derived/)
                    make_review_sheets.py (writes the owner's review sheets to data/curated/review/; adds rows, never changes them)
+                   make_prototype_data.py (copies three standards out of the database into docs/design/prototype/data.js)
                    cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads; ELA only, 0001)
                    math_cross_domain_check.py, show_rows.py (exploratory checks on the math dl=1 CSV)
                    setup_venv.sh, setup_venv.ps1 (create .venv and install requirements)
