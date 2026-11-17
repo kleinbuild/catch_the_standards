@@ -16,21 +16,36 @@ What the data cannot show yet, so a prototype should not promise it: prerequisit
 
 Who uses it and when
 
-These are assumptions to be corrected by the owner, who does this work.
-
-- A special education teacher planning reteaching: starts from a grade-level standard the student is missing, wants the earlier standards to check and teach.
+- A special education teacher planning reteaching: starts from a grade-level standard the student is missing, wants the earlier or prerequisite standards to check and teach.
 - The same teacher writing an IEP goal: wants a prerequisite standard at the student's actual level and wording specific enough to measure. Learning components may be the right grain for that.
-- A general education teacher asked what a student needs before a unit: probably starts from the unit's standard, wants a short list, not a map.
-- For a dual-identified student: the teacher knows the ELD proficiency level and wants the ELD standard at that level beside the ELA standard.
+- A general education teacher is asked by a special education teacher to provide IEP input for progress and present levels of performance. The teacher may have only standard codes for the student, but wants to help more. They can also share informal observations with the special education teacher such as 'Timmy has difficulty with adding 3 digit numbers, with carrying over, and with regrouping.' Either the general education or special education teacher should be able to use this tool to both survey earlier prerequisite or prior related grade level standards to those known through assessment, and also keyword or keyphrase search for tags of skills/concepts (possibly filtered through broadly related standards, or expanded to a broader set of standards- maybe with toggles for searching only directly related/prior standards, or including more broadly related standards, or going to global all standards search, or expanding further to any included non-academic-standards related skills or knowledge in the database such as life skills, prevocational skills, social skills, etc., or building blocks of basic skills and foundational skills).
+- For a dual-identified student: the teacher needs to write ELD goals and may need to spiral down to directly related prior grade level standards or write a goal focused on foundational skills that support the student making progress toward a grade level goal.
 
 Questions for the owner that change the design
 
 1. Where does a teacher start: from a standard code they already know, from a grade and subject they browse, or from a description of what the student cannot do? The third needs text search to be the front door.
-2. When is it open: alone at a desk while planning, or on a screen in an IEP meeting with a parent present? A meeting view needs plain language and less on screen.
-3. What does the teacher carry away: a list to print, text to paste into the IEP system, a saved set to come back to? Which IEP system, if pasting matters (SEIS?).
-4. Phone, Chromebook, or laptop? Most end users are on Mac (CLAUDE.md); whether school-issued devices allow installing software decides a lot.
-5. How should an unreviewed link look next to a reviewed one? Hidden until reviewed, shown as "suggested", or shown the same with the source named.
-6. High school math: does the teacher pick the student's course first (Algebra I or Math I), so only that pathway's copies appear?
+
+Answer: All of these need to be available, because teachers have different levels and types of information available to them - sometimes standards only, sometimes grade/subject only, sometimes informal skill observation only, or some mix of all three kinds. They need to be able to start from any of these and combine/filter options to refine their search.
+
+1. When is it open: alone at a desk while planning, or on a screen in an IEP meeting with a parent present? A meeting view needs plain language and less on screen.
+
+Answer: This is a planning and preparation tool, not an execution/presentation tool. It can be used by one teacher alone, or by a group of teachers and education / student support professionals sitting around a table to collaborate. It could potentially be used in a meeting collaboratively with a parent and education professionals, but this would be only in the rare instances where parents want to be directly involved in shaping student goals beyond what is normal in the parent-school collaboration process. For such a parent, a teacher could also use the tool to show how the foundational instructional methods and materials they are using are related to grade level standards and skills, if questioned about using instructional materials for supplemental instruction that are below grade level. This could also be helpful for teachers in communicating with administrators about how their intervention and specialized / supplemental instruction and reteaching is related to grade level standards and skills.
+
+1. What does the teacher carry away: a list to print, text to paste into the IEP system, a saved set to come back to? Which IEP system, if pasting matters (SEIS?).
+
+A teacher might come away with a standard, a portion of a standard, a focused set of skills. If the data could be secured it might be helpful if they can have something like a chain of thought or custody of data even, showing- the teacher entered certain data, the program provided certain insights, and the teacher is using the data and insights to tailor the instructional program to the specific needs of a specific student. IEP systems are unknown, common in the LA area is Welligent, and in a larger part of California SEIS, and there may be others.
+
+2 . Phone, Chromebook, or laptop? Most end users are on Mac (CLAUDE.md); whether school-issued devices allow installing software decides a lot.
+
+Teachers are always on the go so if there is a way to access this on their phones, even in a more lightweight or streamlined version, that could be of benefit. Laptops, mostly macs, are common, and about 50% of the time users are not permitted to install any apps on district devices. That is kind of the rub of it.
+
+1. How should an unreviewed link look next to a reviewed one? Hidden until reviewed, shown as "suggested", or shown the same with the source named.
+
+Shown with source named and confidence measure. Besides the LLM confidence of match measure, human review can also include an optional confidence metric (simple and qualitative)
+
+1. High school math: does the teacher pick the student's course first (Algebra I or Math I), so only that pathway's copies appear?
+
+Yes, the teacher should likely pick the course first. However, if the course is unknown, there should be an option perhaps that searches all, with a disclaimer or explanation of what is happening and why.
 
 How teachers would get it
 
