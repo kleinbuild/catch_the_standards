@@ -37,7 +37,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from load import split_sub_items                    # noqa: E402
 from join_learning_commons import similarity        # noqa: E402
 
-OWNER_COLUMNS = ["decision", "owner_note"]
+OWNER_COLUMNS = ["decision", "confidence", "owner_note"]
 LINK_HEADER = (["priority", "why", "from_identifier", "from_grade", "from_text",
                 "to_identifier", "to_grade", "to_text"] + OWNER_COLUMNS +
                ["from_record_id", "to_record_id", "type", "reviewed"])
@@ -63,12 +63,33 @@ def link_row(priority, why, a, b, kind):
             "type": kind, "reviewed": 0}
 
 
+def add_confidence_column(path, header):
+    """A sheet written before the confidence column existed gets the column,
+    empty, between decision and owner_note. Every other cell, and the order of
+    the rows, stays as it is. A sheet that already has the column, or whose
+    columns differ in any other way, is not touched."""
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.reader(f))
+    if not rows or rows[0] != [c for c in header if c != "confidence"]:
+        return False
+    at = header.index("confidence")
+    with open(path, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(header)
+        w.writerows(r[:at] + [""] + r[at:] for r in rows[1:])
+    return True
+
+
 def write_sheet(path, header, key, rows):
     """Create the sheet, or add to its end the rows whose key is not in it yet.
     Returns (rows already there, rows added)."""
     rows = sorted(rows, key=lambda r: r["priority"])        # stable: keeps the given order within a priority
+    for r in rows:
+        r.setdefault("confidence", "")
     existing = set()
     if path.exists():
+        if add_confidence_column(path, header):
+            print(f"{path.name}: added the empty confidence column")
         # utf-8-sig reads the file with or without the marker Excel puts at the start
         with open(path, encoding="utf-8-sig", newline="") as f:
             reader = csv.DictReader(f)

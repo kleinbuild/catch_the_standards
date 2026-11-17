@@ -35,14 +35,15 @@ When asked to document what was learned, write it as working notes: claim, then 
 CLAUDE.md, README.md, requirements.txt, .gitignore
 docs/decisions/    one file per decision, numbered; read these before changing data handling
 docs/design/       ui-options.md (first thoughts on the interface and how teachers get the tool; the owner's answers)
-                   prototype/ (index.html, app.js, data.js: three standards in two layouts; open index.html by double-click)
+                   prototype/ (index.html, app.js: search screen and standard screen; open index.html by double-click.
+                   data.js beside them is build output, not committed: `python scripts/make_prototype_data.py`)
 docs/reference/    glossary.md (project terms); generated CACS_URL_REFERENCE.md, codes.csv, codes.json
 scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE record; the standards source, 0011)
                    match_csv_to_records.py (pairs dl=1 CSV rows with scraped records)
                    probe_cacs_ids.py (fetch one HTML results page and report record links and symbols)
                    join_learning_commons.py (pairs CDE records with Learning Commons items; imports math builds-towards links; writes data/derived/)
                    make_review_sheets.py (writes the owner's review sheets to data/curated/review/; adds rows, never changes them)
-                   make_prototype_data.py (copies three standards out of the database into docs/design/prototype/data.js)
+                   make_prototype_data.py (copies the database's standards, links and components into docs/design/prototype/data.js)
                    cacs_codes.py (discover filter codes), compare_cacs.py (subject vs search-all downloads; ELA only, 0001)
                    math_cross_domain_check.py, show_rows.py (exploratory checks on the math dl=1 CSV)
                    setup_venv.sh, setup_venv.ps1 (create .venv and install requirements)
@@ -87,7 +88,15 @@ tests/             test_load.py, test_join.py, test_lookup.py; run with `python 
 
 ## Pick up here (written 2026-11-14 for the next session)
 
-The first slice of the data work is finished and the owner wants to move to interface design and a prototype. Read `docs/design/ui-options.md` first: it holds Claude's first thoughts on delivery (a web page with the database inside it is recommended), on how to draw the prerequisite view, and six questions for the owner whose answers shape the design. The suggested first step is that the owner answers those questions and Claude builds one HTML file with real data for three standards in two layouts.
+The first slice of the data work is finished and the owner wants to move to interface design and a prototype. Read `docs/design/ui-options.md` first: it holds Claude's first thoughts on delivery (a web page with the database inside it is recommended), on how to draw the prerequisite view, and six questions for the owner, with the owner's answers (2026-11-16).
+
+Prototype, 2026-11-16, on branch `design/ui-prototype` (from `build/loader`): `docs/design/prototype/index.html` opens by double-click once `python src/load.py` and `python scripts/make_prototype_data.py` have been run. It holds the whole database (2.7 MB) and has two screens. Search takes a code, words, or subject and grade, with a high school course choice and an ELD level choice; words are also looked for in learning components. The standard screen shows the ladder by default (the owner's choice; table and both remain as a toggle), learning components, the ELA and ELD lists, one step forward, and a collected list that records how each item was reached. `#s=<record ID>` and `#q=<words>&subject=math&grade=2` open a view directly.
+
+Owner's decisions on 2026-11-16: ladder is the default layout; review sheets get an optional `confidence` column (low, medium, high), which the loader stores on `edges.confidence` for kept links with `reviewed=1`; search and the full export were to be built next, and are.
+
+Found while testing search: the words "regroup" and "borrow" are in no standard and no learning component, and "carry" is in 9 standards in other senses. The standards say "compose" and "decompose" (43 standards, 61 components). Text search alone will not take a teacher's wording to the standard. Not decided: whether that is met by the owner's concepts list (0006), a list of teacher terms mapped to standards' terms in `data/curated/`, or something else.
+
+Not built from the owner's answers: search limited to what a chosen standard builds on, skills outside the academic standards (no data), a confidence value for unreviewed links (no data; 0006 allows similarity only as an unreviewed suggestion), and anything stored about a student (0009).
 
 To see the current tool on this machine:
 ```bash
@@ -95,7 +104,8 @@ python src/load.py                                # rebuild data/build/standards
 python src/lookup.py 4.NF.3.a --components        # math: prerequisites, parent standard, learning components
 python src/lookup.py L.5.1b                       # ELA: progression, sub-item b marked, ELD standards that list it
 python src/lookup.py ELD.PI.4.6a.Ex               # ELD: earlier grade, lower level, ELA standards listed against it
-python -m unittest discover tests                 # 83 tests
+python -m unittest discover tests                 # 93 tests
+python scripts/make_prototype_data.py             # then open docs/design/prototype/index.html
 ```
 None of these needs the venv; they use only Python's standard library.
 

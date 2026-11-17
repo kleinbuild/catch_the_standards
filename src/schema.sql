@@ -154,6 +154,9 @@ CREATE TABLE edges (
     source          TEXT NOT NULL,
     note            TEXT,
     reviewed        INTEGER NOT NULL CHECK (reviewed IN (0, 1)),
+    -- How sure the owner is of a link they kept: low, medium or high. Optional,
+    -- and only ever set from a review sheet. NULL means no rating was given.
+    confidence      TEXT CHECK (confidence IN ('low', 'medium', 'high')),
     PRIMARY KEY (from_record_id, to_record_id, type, source),
     CHECK (from_record_id <> to_record_id)
 ) STRICT;

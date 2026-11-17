@@ -443,7 +443,8 @@ def read_decisions(review_dir):
     """The owner's decisions on links, from the sheets in data/curated/review/.
 
     Returns (decisions, pending). A decision is (from, to, type, 'keep' or
-    'reject', note, sheet name) and counts only where the row has reviewed = 1.
+    'reject', note, sheet name, confidence) and counts only where the row has
+    reviewed = 1. confidence is 'low', 'medium', 'high' or None (left blank).
     pending counts rows with a decision written but reviewed still 0.
     """
     decisions, pending = [], 0
@@ -463,8 +464,14 @@ def read_decisions(review_dir):
                 if decision not in ("keep", "reject"):
                     raise LoadError(f"{path.name} line {line}: reviewed is 1 but decision is "
                                     f"{r['decision']!r}. Write keep or reject.")
+                # .get: a sheet without the confidence column is read as all blank
+                confidence = (r.get("confidence") or "").strip().lower() or None
+                if confidence not in (None, "low", "medium", "high"):
+                    raise LoadError(f"{path.name} line {line}: confidence is {r['confidence']!r}. "
+                                    "Write low, medium or high, or leave it blank.")
                 decisions.append((int(r["from_record_id"]), int(r["to_record_id"]), r["type"],
-                                  decision, (r["owner_note"] or "").strip() or None, path.name))
+                                  decision, (r["owner_note"] or "").strip() or None, path.name,
+                                  confidence))
     return decisions, pending
 
 
@@ -472,18 +479,20 @@ def apply_decisions(con, decisions):
     """keep: mark the link reviewed, adding it if it is not there (a candidate
     the owner accepted). reject: leave the link out."""
     kept = added = rejected = 0
-    for a, b, kind, decision, note, sheet in decisions:
+    for a, b, kind, decision, note, sheet, confidence in decisions:
         where = "from_record_id = ? AND to_record_id = ? AND type = ?"
         present = con.execute(f"SELECT COUNT(*) FROM edges WHERE {where}", (a, b, kind)).fetchone()[0]
         if decision == "reject":
             con.execute(f"DELETE FROM edges WHERE {where}", (a, b, kind))
             rejected += 1
         elif present:
-            con.execute(f"UPDATE edges SET reviewed = 1 WHERE {where}", (a, b, kind))
+            con.execute(f"UPDATE edges SET reviewed = 1, confidence = ? WHERE {where}",
+                        (confidence, a, b, kind))
             kept += 1
         else:
             try:
-                con.execute("INSERT INTO edges VALUES (?, ?, ?, 'owner', ?, 1)", (a, b, kind, note))
+                con.execute("INSERT INTO edges VALUES (?, ?, ?, 'owner', ?, 1, ?)",
+                            (a, b, kind, note, confidence))
             except sqlite3.IntegrityError:
                 raise LoadError(f"{sheet}: record {a} or {b} is not in the database.") from None
             added += 1
@@ -568,7 +577,8 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
         con.executemany("INSERT INTO eld_ela_links VALUES (?, ?, ?, ?, ?, ?, ?, ?)", eld_ela)
         summary["eld_ela_links"] = len(eld_ela)
         edges = structural_edges(con) + imported
-        con.executemany("INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?)", edges)
+        con.executemany("INSERT INTO edges (from_record_id, to_record_id, type, source, note, reviewed) "
+                        "VALUES (?, ?, ?, ?, ?, ?)", edges)
         con.executemany("INSERT INTO learning_components VALUES (?, ?, ?, ?, ?)", components)
         con.executemany("INSERT INTO component_links VALUES (?, ?, ?, ?, ?, ?)", component_links)
         summary["components"] = (len(components), len(component_links))

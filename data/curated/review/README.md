@@ -7,6 +7,8 @@ To mark a row, fill in two cells:
 - `decision`: `keep` or `reject`.
 - `reviewed`: change `0` to `1`. A decision counts only when `reviewed` is `1`, so a row can be left half-thought with a decision written and `reviewed` still `0`.
 
+`confidence` is optional: `low`, `medium` or `high`, for how sure you are of a link you keep. Leave it blank when you have no view. It is stored on the link when the row has `reviewed` set to `1` and is shown beside the link in the interface. On `pairings.csv` and `eld_ela_notes.csv` it is recorded only, like the decision.
+
 `owner_note` is free text, for anything worth remembering about the decision.
 
 Do not change, delete, or reorder the other cells or the rows. The record IDs at the right of each row are how the decision finds its link.

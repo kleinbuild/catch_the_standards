@@ -13,6 +13,9 @@ data/build/
 *.sqlite3
 *.db-journal
 
+# The prototype page's copy of the database, written by scripts/make_prototype_data.py
+docs/design/prototype/data.js
+
 # Default output folders when scripts are run from the project root.
 # Move anything worth keeping into docs/reference/ or data/raw/.
 cacs_reference/

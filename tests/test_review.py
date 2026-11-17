@@ -21,6 +21,26 @@ HEADER = "decision,owner_note,from_record_id,to_record_id,type,reviewed\n"
 # Record IDs: L.3.1 = 5685, L.4.1 = 5729, L.5.1 = 5773, 1.G.2 = 301, 3.MD.5.a = 355.
 
 
+WITH_CONFIDENCE = "decision,confidence,owner_note,from_record_id,to_record_id,type,reviewed\n"
+
+
+def confidence_after(sheet_rows):
+    """Build with a sheet that has the confidence column. Returns {link: confidence}."""
+    with tempfile.TemporaryDirectory() as tmp:
+        review = Path(tmp) / "review"
+        review.mkdir()
+        (review / "links.csv").write_text(WITH_CONFIDENCE + sheet_rows, encoding="utf-8")
+        db = Path(tmp) / "standards.db"
+        load.build(ROOT / "data" / "raw", ROOT / "docs" / "reference" / "codes.csv",
+                   ROOT / "src" / "schema.sql", db,
+                   ROOT / "data" / "curated" / "identifier_corrections.csv", review_dir=review)
+        con = sqlite3.connect(db)
+        found = {(a, b, kind): c for a, b, kind, c in con.execute(
+            "SELECT from_record_id, to_record_id, type, confidence FROM edges")}
+        con.close()
+        return found
+
+
 def build_with(sheet_rows):
     """Build a database with one review sheet holding `sheet_rows`. Returns (summary, edges)."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -74,6 +94,26 @@ class Decisions(unittest.TestCase):
     def test_keep_naming_a_record_that_does_not_exist_stops_the_load(self):
         with self.assertRaises(load.LoadError):
             build_with("keep,,301,999999,builds_towards,1\n")
+
+    def test_confidence_on_a_kept_link_is_stored(self):
+        found = confidence_after("keep,High,,5685,5729,next_grade,1\n")
+        self.assertEqual(found[(5685, 5729, "next_grade")], "high")
+
+    def test_confidence_is_optional(self):
+        found = confidence_after("keep,,,5685,5729,next_grade,1\n")
+        self.assertIsNone(found[(5685, 5729, "next_grade")])
+
+    def test_confidence_on_an_accepted_candidate_is_stored(self):
+        found = confidence_after("keep,low,,301,355,builds_towards,1\n")
+        self.assertEqual(found[(301, 355, "builds_towards")], "low")
+
+    def test_confidence_without_reviewed_1_is_not_applied(self):
+        found = confidence_after("keep,high,,5685,5729,next_grade,0\n")
+        self.assertIsNone(found[(5685, 5729, "next_grade")])
+
+    def test_an_unknown_confidence_stops_the_load(self):
+        with self.assertRaises(load.LoadError):
+            confidence_after("keep,very,,5685,5729,next_grade,1\n")
 
     def test_the_real_sheets_load(self):
         with tempfile.TemporaryDirectory() as tmp:
