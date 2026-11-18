@@ -7,8 +7,9 @@ load.py - rebuild data/build/standards.db from the scraped records files.
 Reads the newest data/raw/<subject>_records_<date>.csv for math, ela and eld,
 docs/reference/codes.csv, data/curated/identifier_corrections.csv and, if they
 exist, the learning_commons_*.csv files in data/derived/ (parents, edges,
-eld_ela, components, component_links), and the owner's
-decisions in data/curated/review/, and writes data/build/standards.db. The old database is replaced, never updated in place
+eld_ela, components, component_links), the owner's decisions in
+data/curated/review/ and data/curated/search_terms.csv, and writes
+data/build/standards.db. The old database is replaced, never updated in place
 (decisions 0007, 0010).
 
 Every standard is keyed by its CDE record ID (0011). Text and identifiers are
@@ -31,7 +32,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_VERSION = "5"
+SCHEMA_VERSION = "6"
 SUBJECTS = ("math", "ela", "eld")
 
 # Records-file column -> database column.
@@ -207,6 +208,40 @@ def read_corrections(path):
         return {}
     with open(path, encoding="utf-8", newline="") as f:
         return {int(r["record_id"]): r for r in csv.DictReader(f)}
+
+
+SEARCH_TERM_COLUMNS = ["teacher_term", "standards_term", "subject", "evidence", "source", "reviewed"]
+
+
+def read_search_terms(path):
+    """Rows of data/curated/search_terms.csv, checked. Missing file: none."""
+    if not path or not path.exists():
+        return []
+    # utf-8-sig reads the file with or without the marker Excel puts at the start
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames != SEARCH_TERM_COLUMNS:
+            raise LoadError(f"{path.name}: columns should be {', '.join(SEARCH_TERM_COLUMNS)}")
+        rows, seen = [], set()
+        for line, r in enumerate(reader, start=2):
+            teacher = " ".join(r["teacher_term"].split()).lower()
+            standards = " ".join(r["standards_term"].split()).lower()
+            subject = r["subject"].strip().lower() or None
+            if not teacher or not standards:
+                raise LoadError(f"{path.name} line {line}: teacher_term and standards_term are both needed")
+            if subject not in (None, "math", "ela", "eld"):
+                raise LoadError(f"{path.name} line {line}: subject is {r['subject']!r}; "
+                                "write math, ela, eld, or leave it blank")
+            if r["reviewed"].strip() not in ("0", "1"):
+                raise LoadError(f"{path.name} line {line}: reviewed is {r['reviewed']!r}; write 0 or 1")
+            if not r["source"].strip():
+                raise LoadError(f"{path.name} line {line}: source is empty")
+            if (teacher, standards) in seen:
+                raise LoadError(f"{path.name} line {line}: {teacher} -> {standards} is listed twice")
+            seen.add((teacher, standards))
+            rows.append((teacher, standards, subject, r["evidence"].strip(), r["source"].strip(),
+                         int(r["reviewed"])))
+    return rows
 
 
 def read_records(path, subject, codes, corrections=None):
@@ -502,8 +537,10 @@ def apply_decisions(con, decisions):
 # ---------- building the database ----------
 
 def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edges_path=None,
-          parents_path=None, eld_ela_path=None, review_dir=None, components_dir=None):
+          parents_path=None, eld_ela_path=None, review_dir=None, components_dir=None,
+          search_terms_path=None):
     """Read everything, then write the database. Returns a summary dict."""
+    search_terms = read_search_terms(search_terms_path)
     codes = read_codes(codes_path)
     corrections = read_corrections(corrections_path) if corrections_path else {}
     loaded, summary = [], {"subjects": {}, "unparsed": [], "grade_mismatch": [], "corrected": []}
@@ -582,6 +619,8 @@ def build(raw_dir, codes_path, schema_path, db_path, corrections_path=None, edge
         con.executemany("INSERT INTO learning_components VALUES (?, ?, ?, ?, ?)", components)
         con.executemany("INSERT INTO component_links VALUES (?, ?, ?, ?, ?, ?)", component_links)
         summary["components"] = (len(components), len(component_links))
+        con.executemany("INSERT INTO search_terms VALUES (?, ?, ?, ?, ?, ?)", search_terms)
+        summary["search_terms"] = (len(search_terms), sum(r[5] for r in search_terms))
         summary["decisions"] = apply_decisions(con, decisions)
         summary["decisions"]["pending"] = pending
         summary["edges"] = con.execute(
@@ -607,7 +646,8 @@ def main():
                         ROOT / "data" / "derived" / "learning_commons_parents.csv",
                         ROOT / "data" / "derived" / "learning_commons_eld_ela.csv",
                         ROOT / "data" / "curated" / "review",
-                        ROOT / "data" / "derived")
+                        ROOT / "data" / "derived",
+                        ROOT / "data" / "curated" / "search_terms.csv")
     except LoadError as e:
         sys.exit(f"Load stopped, database not changed.\n  {e}")
 
@@ -628,6 +668,8 @@ def main():
     print(f"ELA standards listed against ELD standards: {summary['eld_ela_links']}")
     print(f"learning components: {summary['components'][0]}, attached in "
           f"{summary['components'][1]} places")
+    print(f"search terms (teacher wording -> standards wording): {summary['search_terms'][0]}, "
+          f"{summary['search_terms'][1]} reviewed")
     print("\nedges:")
     for kind, source, n in summary["edges"]:
         print(f"  {n:5}  {kind} ({source})")

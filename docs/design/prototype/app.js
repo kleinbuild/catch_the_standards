@@ -66,7 +66,7 @@ function buildIndexes() {
   for (const s of DATA.standards) {
     byId.set(s.id, s);
     s.label = s.identifier + (s.course || s.level ? ` (${s.course || s.level})` : "");
-    s.search = norm([s.identifier, s.corrected || "", s.text, ...s.subs.map((x) => x[1])].join(" "));
+    s.words = norm([s.text, ...s.subs.map((x) => x[1])].join(" "));
     if (s.subject === "eld") push(eldRecords, `${s.strand}|${s.number}|${s.gmin}`, s);
   }
   for (const [from, to, type, source, note, reviewed, confidence] of DATA.edges) {
@@ -92,19 +92,115 @@ function buildIndexes() {
 }
 
 // ---- search ------------------------------------------------------------
+//
+// How words are matched. The typed text is split into words, and small words
+// (and, the, with...) are dropped. Each remaining word is matched at the start
+// of a word in the standard, after cutting a common ending, so "adding" finds
+// add, adds and addition. A teacher term from data/curated/search_terms.csv
+// that matches typed words ("regrouping") also lets the standards' wording
+// ("compose", "decompose") count for those words. A standard that has every
+// word comes first; if none has every word, the ones with the most are shown.
 
-// Returns [{s, rank, letter, matched, copies}], best first.
+const SMALL_WORDS = new Set(("a an and are as at be but by can for from has have he her him his i " +
+  "in is it its of on or she so that the their them they this to was were when who will with").split(" "));
+
+// Cut one common ending, keeping at least three letters: adding -> add,
+// regrouping -> regroup, compose -> compos, multiply -> multipl.
+function stem(word) {
+  if (word.length <= 4) return word;
+  for (const ending of ["ing", "ed", "es", "s", "e", "y"]) {
+    if (word.endsWith(ending) && word.length - ending.length >= 3) return word.slice(0, -ending.length);
+  }
+  return word;
+}
+
+function words(text) { return norm(text).split(/[^a-z0-9]+/).filter(Boolean); }
+
+function escapeRegExp(text) { return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+// A pattern for a word or phrase as the standards write it: each word at the
+// start of a word in the text, a space or hyphen between them, and the last
+// word's ending cut. "skip-count" and "skip count" give the same pattern.
+function pattern(phrase) {
+  const parts = words(phrase);
+  parts[parts.length - 1] = stem(parts[parts.length - 1]);
+  const end = /^[0-9]+$/.test(parts[parts.length - 1]) ? "(?![0-9])" : "";   // 3 is not 30
+  return new RegExp("\\b" + parts.map(escapeRegExp).join("[\\s-]+") + end);
+}
+
+// Does the typed word `typed` count as the term's word `termWord`?
+function sameWord(typed, termWord) {
+  return typed === termWord || (termWord.length >= 3 && typed.startsWith(stem(termWord)));
+}
+
+// The words to look for, as slots. A slot is satisfied when any of its
+// alternatives is: the typed word itself, or (for a teacher term) the
+// standards' wording. A teacher term of two words takes up two typed words.
+function slotsFor(typedText) {
+  const typed = words(typedText).filter((w) => !SMALL_WORDS.has(w));
+  const terms = (DATA.search_terms || [])
+    .map(([teacher, standards, subject, evidence, source, reviewed]) =>
+      ({ teacher, teacherWords: words(teacher), standards, subject, source, reviewed }))
+    .filter((t) => !state.subject || !t.subject || t.subject === state.subject)
+    .sort((a, b) => b.teacherWords.length - a.teacherWords.length);
+  const slots = [];
+  for (let i = 0; i < typed.length;) {
+    const size = terms.map((t) => t.teacherWords.length)
+      .find((n) => terms.some((t) => t.teacherWords.length === n &&
+        t.teacherWords.every((w, k) => typed[i + k] !== undefined && sameWord(typed[i + k], w))));
+    if (size) {
+      const span = typed.slice(i, i + size);
+      const via = terms.filter((t) => t.teacherWords.length === size &&
+        t.teacherWords.every((w, k) => sameWord(span[k], w)))
+        .map((t) => ({ ...t, typed: span.join(" "), re: pattern(t.standards) }));
+      // The typed words themselves count only as the phrase typed: "3 digit", not 3 and digit anywhere.
+      slots.push({ typed: span.join(" "), own: [pattern(span.join(" "))], via });
+      i += size;
+    } else {
+      slots.push({ typed: typed[i], own: [pattern(typed[i])], via: [] });
+      i += 1;
+    }
+  }
+  return slots;
+}
+
+// null if `text` does not satisfy the slot; "own" if the typed words are in
+// it; otherwise the teacher term whose standards wording is. A term listed for
+// one subject counts only in that subject: "compose" is regrouping in math,
+// not in writing.
+function satisfies(slot, text, subject) {
+  if (slot.own.every((re) => re.test(text))) return "own";
+  return slot.via.find((t) => (!t.subject || t.subject === subject) && t.re.test(text)) || null;
+}
+
+// How well one standard matches: which slot each part of it satisfies, and the
+// learning component that helped, if one did.
+function scoreStandard(s, slots) {
+  const inText = slots.map((slot) => satisfies(slot, s.words, s.subject));
+  let best = { how: inText, component: null };
+  const count = (how) => how.filter(Boolean).length;
+  if (state.inComponents && count(inText) < slots.length) {
+    for (const c of componentsOf.get(s.id) || []) {
+      const how = slots.map((slot, i) => inText[i] || satisfies(slot, c.search, s.subject));
+      if (count(how) > count(best.how)) best = { how, component: c.text };
+    }
+  }
+  return { ...best, count: count(best.how) };
+}
+
+// Returns {hits: [{s, rank, letter, score, copies}], slots, partial}.
 //   rank 0  the code typed is this standard's code
 //   rank 1  the code starts with what was typed
-//   rank 2  every word typed is in the standard's text
-//   rank 3  every word typed is in one of its learning components
+//   rank 2  every word is in the standard's text
+//   rank 3  every word is in the text or one of its learning components
+//   rank 4  only some of the words (shown only when nothing has them all)
 function search() {
   const typed = norm(state.q.trim());
-  const words = typed.split(/\s+/).filter(Boolean);
   const asCode = typed.replace(/\s+/g, "");
   const part = asCode.match(/^(.+\d)\.?([a-z])$/);     // l.5.1b -> l.5.1 and b
+  const slots = typed ? slotsFor(typed) : [];
   const grade = state.grade === "" ? null : Number(state.grade);
-  const found = [];
+  let found = [];
 
   for (const s of DATA.standards) {
     if (s.placeholder) continue;                        // "(Begins in grade 2)": not a standard
@@ -113,45 +209,54 @@ function search() {
     if (state.course && s.course && s.course !== state.course) continue;
     if (state.level && s.level && s.level !== state.level) continue;
 
-    const hit = { s, rank: 2, letter: null, matched: null, copies: [s] };
-    if (words.length) {
+    const hit = { s, rank: 2, letter: null, score: null, copies: [s] };
+    if (typed) {
       const codes = [norm(s.norm), s.corrected ? norm(s.corrected) : null];
       if (codes.includes(asCode)) hit.rank = 0;
       else if (part && codes.includes(part[1]) && s.subs.some((x) => x[0] === part[2])) {
         hit.rank = 0;
         hit.letter = part[2];
-      } else if (codes[0].startsWith(asCode)) hit.rank = 1;
-      else if (words.every((w) => s.search.includes(w))) hit.rank = 2;
-      else {
-        const component = state.inComponents && (componentsOf.get(s.id) || [])
-          .find((c) => words.every((w) => c.search.includes(w)));
-        if (!component) continue;
-        hit.rank = 3;
-        hit.matched = component.text;
-      }
+      } else if (asCode.length >= 2 && /\d/.test(asCode) && codes[0].startsWith(asCode)) hit.rank = 1;
+      else if (slots.length) {
+        hit.score = scoreStandard(s, slots);
+        if (!hit.score.count) continue;
+        hit.rank = hit.score.count < slots.length ? 4 : hit.score.component ? 3 : 2;
+      } else continue;
     }
     found.push(hit);
   }
-  found.sort((a, b) => a.rank - b.rank);                // stable: keeps grade order within a rank
+  const partial = found.length > 0 && found.every((h) => h.rank === 4);
+  if (!partial) found = found.filter((h) => h.rank < 4);
+  // Stable sort: within a rank (and score), standards keep grade order.
+  found.sort((a, b) => a.rank - b.rank || (b.score ? b.score.count : 0) - (a.score ? a.score.count : 0));
 
   // A high school math standard is one record per course. Show it once and
   // list the courses, so five near-identical results do not crowd the list.
   const groups = new Map();
-  const out = [];
+  const hits = [];
   for (const hit of found) {
     const key = hit.s.course ? `${hit.s.identifier}|${hit.s.text}` : null;
     if (key && groups.has(key)) groups.get(key).copies.push(hit.s);
     else {
       if (key) groups.set(key, hit);
-      out.push(hit);
+      hits.push(hit);
     }
   }
-  return out;
+  return { hits, slots, partial };
 }
 
-function resultCard(hit) {
+const TERM_SOURCES = { claude: "Claude", owner: "the owner" };
+
+function termWords(t) {
+  const by = TERM_SOURCES[t.source] || t.source;
+  return `${t.typed} → ${t.standards} (${t.reviewed ? "reviewed" : `suggested by ${by}, not reviewed`})`;
+}
+
+function resultCard(hit, slots) {
   const s = hit.s;
   const open = (record) => () => openStandard(record.id, hit.letter);
+  const how = hit.score ? hit.score.how : [];
+  const viaTerms = how.filter((h) => h && h !== "own");
   return el("div", { class: "card" },
     el("div", { class: "head" },
       el("button", { class: "code", onclick: open(s) },
@@ -162,7 +267,15 @@ function resultCard(hit) {
     s.subs.length ? el("p", { class: "muted" }, plural(s.subs.length, "lettered part")) : null,
     s.url ? null : el("p", { class: "muted" },
       "CDE lists only the parts of this standard; the text of the whole is from Learning Commons."),
-    hit.matched ? el("p", { class: "muted" }, "Found in a learning component: ", hit.matched) : null,
+    hit.rank === 4
+      ? el("p", { class: "muted" }, `Has ${hit.score.count} of the ${slots.length} words: ` +
+          slots.filter((_, i) => how[i]).map((slot) => slot.typed).join(", "))
+      : null,
+    viaTerms.length
+      ? el("p", { class: "muted" }, "Found through: ", viaTerms.map(termWords).join("; "))
+      : null,
+    hit.score && hit.score.component
+      ? el("p", { class: "muted" }, "Found in a learning component: ", hit.score.component) : null,
     hit.copies.length > 1
       ? el("p", { class: "muted inline" }, `In ${hit.copies.length} courses. Open it in:`,
           hit.copies.map((c) => el("button", { class: "code", onclick: open(c) }, c.course)))
@@ -170,7 +283,7 @@ function resultCard(hit) {
 }
 
 function renderSearch() {
-  const hits = search();
+  const { hits, slots, partial } = search();
   const anyFilter = state.q.trim() || state.subject || state.grade !== "" || state.course || state.level;
   document.getElementById("course-box").hidden = state.subject && state.subject !== "math";
   document.getElementById("level-box").hidden = state.subject && state.subject !== "eld";
@@ -178,17 +291,29 @@ function renderSearch() {
   const count = document.getElementById("count");
   const results = document.getElementById("results");
   if (!anyFilter) {
-    count.textContent = `${hits.length} standards. Type a code or some words, or choose a subject and grade.`;
+    count.textContent = "Type a code or some words, or choose a subject and grade.";
     results.replaceChildren();
     return;
   }
   count.textContent = hits.length ? `${plural(hits.length, "standard")} found.` : "Nothing found.";
   const parts = [];
+  const used = slots.filter((slot) => slot.via.length);
+  if (used.length) {
+    parts.push(el("p", { class: "muted" }, "Your words were also looked for as the standards word them: ",
+      used.map((slot) => `${slot.typed} → ${slot.via.map((t) => t.standards).join(" or ")}`).join("; "),
+      `. These pairs are from the search terms list; ` +
+      `${used.flatMap((slot) => slot.via).filter((t) => t.reviewed).length} of ` +
+      `${used.flatMap((slot) => slot.via).length} are reviewed.`));
+  }
+  if (partial) {
+    parts.push(el("p", { class: "notice" }, `No standard has all ${slots.length} words ` +
+      `(${slots.map((slot) => slot.typed).join(", ")}). These have the most, best first.`));
+  }
   if (!hits.length && state.q.trim()) {
     parts.push(el("p", { class: "muted" },
-      "The search looks for each word as typed, inside longer words too: “subtract” also " +
-      "finds subtracting and subtraction. It knows only the words the standards themselves use. " +
-      "They never say regroup, carry over or borrow, for example; they say compose and decompose."));
+      "The search knows only the words the standards themselves use, and the teacher terms in its " +
+      "list. It looks for the start of each word, so “subtract” also finds subtracting " +
+      "and subtraction."));
   }
   if (!state.course && hits.some((h) => h.copies.length > 1)) {
     parts.push(el("p", { class: "notice" },
@@ -197,7 +322,7 @@ function renderSearch() {
       "here with its courses; what it builds on can differ by course. Choose the student’s " +
       "course above to see only that course."));
   }
-  parts.push(...hits.slice(0, state.shown).map(resultCard));
+  parts.push(...hits.slice(0, state.shown).map((hit) => resultCard(hit, slots)));
   if (hits.length > state.shown) {
     parts.push(el("p", {}, el("button", {
       onclick: () => { state.shown += PAGE; renderSearch(); },

@@ -1,0 +1,18 @@
+teacher_term,standards_term,subject,evidence,source,reviewed
+regroup,compose,math,"""regroup"" is in no standard and no learning component; 2.NBT.7 says ""compose or decompose tens or hundreds"". ""compos"" also matches composite numbers (4.OA.4), composing shapes (K.G.6) and writing (W.K.1).",claude,0
+regroup,decompose,math,"""regroup"" is in no standard and no learning component; ""decompos"" is in 10 standards (2.NBT.7, 1.OA.6, K.NBT.1) and 40 components.",claude,0
+carry,compose,math,"Carrying in addition is composing a ten (2.NBT.7). ""carry"" in the standards is used in other senses only: carry a figure onto itself (G-CO.3), carry out assigned roles (SL.4.1).",claude,0
+carry over,compose,math,"The same as carry, written as teachers often say it, so that ""over"" is not searched for on its own.",claude,0
+borrow,decompose,math,"Borrowing in subtraction is decomposing a ten (2.NBT.7). ""borrow"" is in no standard and no learning component.",claude,0
+take away,taking from,math,"""take away"" is in no standard; ""taking from"" is in 7 (K.OA.1 to K.OA.5, 1.OA.1, 2.OA.1).",claude,0
+take away,subtract,math,"""take away"" is in no standard; ""subtract"" is in 60 standards and 96 components.",claude,0
+minus,subtract,math,"""minus"" is in no standard and no learning component.",claude,0
+times table,from memory,math,"""times table"" is in no standard; 3.OA.7 says ""know from memory all products of two one-digit numbers"" (also 2.OA.2 for sums).",claude,0
+times table,multiply,math,"""times table"" is in no standard. ""multipl"" is in 144 standards, including multiple-meaning words (L.3.4), so it finds much more than facts.",claude,0
+skip count,skip-count,math,"The standards write it with a hyphen (2.NBT.2, the only one).",claude,0
+1-digit,one-digit,math,"The standards spell numbers out: one-digit is in 7 standards (2.OA.2, 3.OA.7, 1.NBT.4); 1-digit in none.",claude,0
+2-digit,two-digit,math,"The standards spell numbers out: two-digit is in 9 standards (1.NBT.3, 1.NBT.4, 2.NBT.6); 2-digit in none.",claude,0
+3-digit,three-digit,math,"The standards spell numbers out: three-digit is in 5 standards (2.NBT.1, 2.NBT.4, 2.NBT.7); 3-digit in none, and in 3 learning components.",claude,0
+4-digit,four-digit,math,"The standards spell numbers out: four-digit is in 2 standards (4.NBT.6, 5.NBT.6); 4-digit in none.",claude,0
+sight word,high-frequency,ela,"RF.K.3 says ""read common high-frequency words by sight""; ""sight"" is in that one standard and in 139 components.",claude,0
+sound out,decode,ela,"""sound out"" is in no standard and one component; ""decod"" is in RF.K.3 to RF.5.3 and 103 components.",claude,0

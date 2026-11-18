@@ -21,6 +21,9 @@ docs/design/prototype/data.js
 cacs_reference/
 cacs_compare/
 
+# Separate working copies Claude Code makes for background jobs
+.claude/worktrees/
+
 # Secrets
 .env
 

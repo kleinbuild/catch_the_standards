@@ -31,7 +31,8 @@ class Export(unittest.TestCase):
                    ROOT / "src" / "schema.sql", db,
                    ROOT / "data" / "curated" / "identifier_corrections.csv",
                    DERIVED / "learning_commons_edges.csv", DERIVED / "learning_commons_parents.csv",
-                   DERIVED / "learning_commons_eld_ela.csv", components_dir=DERIVED)
+                   DERIVED / "learning_commons_eld_ela.csv", components_dir=DERIVED,
+                   search_terms_path=ROOT / "data" / "curated" / "search_terms.csv")
         cls.con = sqlite3.connect(db)
         cls.con.row_factory = sqlite3.Row
         cls.data = make_prototype_data.export(cls.con)
@@ -50,6 +51,8 @@ class Export(unittest.TestCase):
         self.assertEqual(len(self.data["eld_ela"]), self.count("eld_ela_links"))
         self.assertEqual(len(self.data["components"]), self.count("learning_components"))
         self.assertEqual(len(self.data["component_links"]), self.count("component_links"))
+        self.assertEqual(len(self.data["search_terms"]), self.count("search_terms"))
+        self.assertGreater(len(self.data["search_terms"]), 0)
 
     def test_every_link_names_exported_standards(self):
         ids = {s["id"] for s in self.data["standards"]}

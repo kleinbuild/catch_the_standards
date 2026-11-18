@@ -50,7 +50,8 @@ scripts/           scrape_cacs_records.py (subject-page HTML to one row per CDE 
 src/               schema.sql (tables), load.py (rebuilds data/build/standards.db; standard library only)
                    lookup.py (what a standard builds on: `python src/lookup.py L.5.1b`)
 data/raw/          scraped records files (UTF-8) and dl=1 CSV downloads (cp1252), committed, named with date
-data/curated/      hand-reviewed data: identifier_corrections.csv; later concepts and reviewed edges. The owner's expert work.
+data/curated/      hand-reviewed data: identifier_corrections.csv, search_terms.csv (teacher wording -> standards wording),
+                   review/ (sheets the owner marks); later concepts and reviewed edges. The owner's expert work.
 data/derived/      output of join_learning_commons.py, committed: IDs and codes, no standards text. Regenerated, not hand-edited.
 data/build/        standards.db, rebuilt by load.py, never committed
 tests/             test_load.py, test_join.py, test_lookup.py; run with `python -m unittest discover tests`
@@ -94,7 +95,9 @@ Prototype, 2026-11-16, built on branch `design/ui-prototype` and merged into `bu
 
 Owner's decisions on 2026-11-16: ladder is the default layout; review sheets get an optional `confidence` column (low, medium, high), which the loader stores on `edges.confidence` for kept links with `reviewed=1`; search and the full export were to be built next, and are.
 
-Found while testing search: the words "regroup" and "borrow" are in no standard and no learning component, and "carry" is in 9 standards in other senses. The standards say "compose" and "decompose" (43 standards, 61 components). Text search alone will not take a teacher's wording to the standard. Not decided: whether that is met by the owner's concepts list (0006), a list of teacher terms mapped to standards' terms in `data/curated/`, or something else.
+Found while testing search: the words "regroup" and "borrow" are in no standard and no learning component, and "carry" is in 9 standards in other senses. The standards say "compose" and "decompose" (43 standards, 61 components), and spell out "three-digit" where teachers write "3-digit". Text search alone will not take a teacher's wording to the standard.
+
+Search terms, 2026-11-17, branch `design/search-terms`: `data/curated/search_terms.csv` pairs a teacher's word with the standards' word (17 rows suggested by Claude, `source=claude`, `reviewed=0`, each with evidence). The loader puts them in the table `search_terms`; they are never edges (0006). In the prototype a pair lets the standards' wording count for the teacher's, only in the pair's subject, and each result found that way names the pair and whether it is reviewed. Search also now matches the start of words after cutting one ending ("adding" finds add and addition), drops small words, and, when no standard has every word, lists those with the most, saying how many. "Timmy has difficulty with adding 3 digit numbers, with carrying over, and with regrouping" puts 2.NBT.7 first (5 of 7 words). Still open: whether the owner's concepts list (0006) later replaces or feeds this list.
 
 Not built from the owner's answers: search limited to what a chosen standard builds on, skills outside the academic standards (no data), a confidence value for unreviewed links (no data; 0006 allows similarity only as an unreviewed suggestion), and anything stored about a student (0009).
 
@@ -104,7 +107,7 @@ python src/load.py                                # rebuild data/build/standards
 python src/lookup.py 4.NF.3.a --components        # math: prerequisites, parent standard, learning components
 python src/lookup.py L.5.1b                       # ELA: progression, sub-item b marked, ELD standards that list it
 python src/lookup.py ELD.PI.4.6a.Ex               # ELD: earlier grade, lower level, ELA standards listed against it
-python -m unittest discover tests                 # 93 tests
+python -m unittest discover tests                 # 101 tests
 python scripts/make_prototype_data.py             # then open docs/design/prototype/index.html
 ```
 None of these needs the venv; they use only Python's standard library.

@@ -87,6 +87,10 @@ def export(con):
         # component ID -> [text, author]
         "components": {r["component_id"]: [one_line(r["text"]), r["author"]] for r in con.execute(
             "SELECT component_id, text, author FROM learning_components ORDER BY component_id")},
+        # [teacher term, standards term, subject or None, evidence, source, reviewed]
+        "search_terms": [list(r) for r in con.execute(
+            "SELECT teacher_term, standards_term, subject, evidence, source, reviewed "
+            "FROM search_terms ORDER BY teacher_term, standards_term")],
         # [record ID, sub-item letter or '', component ID, reviewed]
         "component_links": [list(r) for r in con.execute(
             "SELECT record_id, letter, component_id, reviewed FROM component_links "

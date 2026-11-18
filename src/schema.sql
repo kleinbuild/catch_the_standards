@@ -203,3 +203,18 @@ CREATE TABLE component_links (
     reviewed      INTEGER NOT NULL CHECK (reviewed IN (0, 1)),
     PRIMARY KEY (record_id, letter, component_id)
 ) STRICT;
+
+-- Words teachers use, paired with the words the standards use for the same
+-- thing: "regroup" with "compose" and "decompose". From
+-- data/curated/search_terms.csv. Search uses a pair to find more standards; a
+-- pair is never a link between standards (0006). Rows Claude suggested have
+-- source 'claude' and reviewed 0 until the owner reviews them.
+CREATE TABLE search_terms (
+    teacher_term   TEXT NOT NULL,
+    standards_term TEXT NOT NULL,
+    subject        TEXT CHECK (subject IN ('math', 'ela', 'eld')),   -- NULL: any subject
+    evidence       TEXT NOT NULL,
+    source         TEXT NOT NULL,
+    reviewed       INTEGER NOT NULL CHECK (reviewed IN (0, 1)),
+    PRIMARY KEY (teacher_term, standards_term)
+) STRICT;
